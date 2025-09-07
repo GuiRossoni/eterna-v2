@@ -1,6 +1,5 @@
 # Eterna V2 — Biblioteca Virtual
 
-Este projeto foi ajustado para o desafio de Refatoração UI/UX Inicial. Abaixo estão as entregas e as escolhas técnicas realizadas.
 ## Funcionalidades implementadas
 
 - Atomic Design:
@@ -35,22 +34,12 @@ Este projeto foi ajustado para o desafio de Refatoração UI/UX Inicial. Abaixo 
 - `google_fonts` para tipografia.
 - `http` para requisições REST (adicionado em `pubspec.yaml`).
 
-## Executar o projeto
-
-1. Instale as dependências.
-2. Rode o app em um emulador/dispositivo.
-
 ## Notas técnicas
 
 - Atomic Design: `AtomButton` encapsula microinterações e acessibilidade; `MoleculeTextField` padroniza campos de entrada (label, ícone, validação, obscureText/keyboardType).
 - Acessibilidade: `Semantics` em imagens, botões e mensagens vazias; tooltips nos ícones da `AppBar`.
 - API: `FutureBuilder` gerencia estados assíncronos; erros são exibidos de forma amigável.
 
-## Próximos passos sugeridos
-
-- Adicionar estados de loading/disabled nos botões atômicos.
-- Internacionalização (i18n) das mensagens.
-- Testes widget para validar acessibilidade e interações.
 # 📚 Eterna Livraria
 
 A **Eterna Livraria** é um projeto que simula uma plataforma de compra, venda e troca de livros novos e usados.  
@@ -74,10 +63,4 @@ Atualmente, o projeto conta com as seguintes telas:
 O aplicativo busca ser a base de uma futura plataforma completa de livraria digital, permitindo:  
 - Comprar livros novos e usados.  
 - Vender exemplares.  
-- Realizar trocas entre usuários.  
-
-
-## ⚙ Tecnologias e ferramentas
-
-- Flutter (Dart) — SDK compatível com `sdk: ^3.7.0` (ver `pubspec.yaml`)
-- Dart (versão conforme `pubspec.yaml`)
+- Realizar trocas entre usuários.
