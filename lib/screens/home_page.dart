@@ -74,6 +74,7 @@ class _HomePageState extends State<HomePage> {
         'title': book.title,
         'sinopse': book.synopsis,
         'heroTag': heroTag,
+        'imageAsset': book.imageAsset,
       },
     );
   }
