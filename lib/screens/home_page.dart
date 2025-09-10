@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/shared.dart';
+import '../models/book_model.dart';
+import '../components/organisms/book_section.dart';
+import '../components/molecules/search_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,79 +12,70 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _formKey = GlobalKey<FormState>();
-  final _searchController = TextEditingController();
+  // Dados mockados (poderiam vir de uma API futuramente)
+  final List<BookModel> trendingBooks = const [
+    BookModel(
+      title: 'Livro 1',
+      imageAsset: 'assets/imagens/Livro1.webp',
+      synopsis: 'Esta é a sinopse do livro 1.',
+    ),
+    BookModel(
+      title: 'Livro 2',
+      imageAsset: 'assets/imagens/Livro2.webp',
+      synopsis: 'Esta é a sinopse do livro 2.',
+    ),
+  ];
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  final List<BookModel> saleBooks = const [
+    BookModel(
+      title: 'Livro 3',
+      imageAsset: 'assets/imagens/Livro3.webp',
+      synopsis: 'Esta é a sinopse do livro 3.',
+    ),
+    BookModel(
+      title: 'Livro 4',
+      imageAsset: 'assets/imagens/Livro4.webp',
+      synopsis: 'Esta é a sinopse do livro 4.',
+    ),
+  ];
 
-  Widget _buildBookRow(
-    BuildContext context,
-    String title,
-    List<String> imagens,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 160,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: imagens.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              final tag = '$title-$index';
-              return Semantics(
-                label: 'Abrir detalhes do ${title.toLowerCase()} ${index + 1}',
-                button: true,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/book-details',
-                      arguments: {
-                        'title': 'Livro ${index + 1}',
-                        'sinopse': 'Esta é a sinopse do livro ${index + 1}.',
-                        'heroTag': tag,
-                      },
-                    );
-                  },
-                  child: Hero(
-                    tag: tag,
-                    child: Container(
-                      width: 110,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        image: DecorationImage(
-                          image: AssetImage(imagens[index]),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+  final List<BookModel> swapBooks = const [
+    BookModel(
+      title: 'Livro 5',
+      imageAsset: 'assets/imagens/Livro5.jpg',
+      synopsis: 'Esta é a sinopse do livro 5.',
+    ),
+    BookModel(
+      title: 'Livro 6',
+      imageAsset: 'assets/imagens/Livro6.jpg',
+      synopsis: 'Esta é a sinopse do livro 6.',
+    ),
+  ];
+
+  final List<BookModel> donationBooks = const [
+    BookModel(
+      title: 'Livro 7',
+      imageAsset: 'assets/imagens/Livro7.jpg',
+      synopsis: 'Esta é a sinopse do livro 7.',
+    ),
+    BookModel(
+      title: 'Livro 8',
+      imageAsset: 'assets/imagens/Livro8.jpg',
+      synopsis: 'Esta é a sinopse do livro 8.',
+    ),
+  ];
+
+  void _openBookDetails(BookModel book, String section) {
+    final heroTag = '${section}-${book.title}';
+    Navigator.pushNamed(
+      context,
+      '/book-details',
+      arguments: {
+        'title': book.title,
+        'sinopse': book.synopsis,
+        'heroTag': heroTag,
+      },
     );
-  }
-
-  String? _validateSearch(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Digite algo para pesquisar';
-    }
-    if (value.trim().length < 3) {
-      return 'Digite pelo menos 3 caracteres';
-    }
-    return null;
   }
 
   @override
@@ -106,86 +100,62 @@ class _HomePageState extends State<HomePage> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: GlassPanel(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SearchBarMolecule(
+                  onSearch: (query) {
+                    FocusScope.of(context).unfocus();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Buscando por: $query')),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _searchController,
-                          decoration: const InputDecoration(
-                            hintText: "Pesquisar livros...",
-                            prefixIcon: Icon(Icons.search),
-                          ),
-                          validator: _validateSearch,
-                        ),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.science),
+                        label: const Text('Demonstração Atomic Design'),
+                        onPressed:
+                            () => Navigator.pushNamed(context, '/atomic-demo'),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            // Aqui você pode implementar a lógica de pesquisa
-                            FocusScope.of(context).unfocus();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Buscando por: ${_searchController.text.trim()}',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Buscar'),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.cloud_download),
+                        label: const Text('Demonstração Consumo de API'),
+                        onPressed:
+                            () => Navigator.pushNamed(context, '/api-demo'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  // Botões de acesso às demonstrações
-                  Center(
-                    child: Column(
-                      children: [
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.science),
-                          label: const Text('Demonstração Atomic Design'),
-                          onPressed:
-                              () =>
-                                  Navigator.pushNamed(context, '/atomic-demo'),
-                        ),
-                        const SizedBox(height: 12),
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.cloud_download),
-                          label: const Text('Demonstração Consumo de API'),
-                          onPressed:
-                              () => Navigator.pushNamed(context, '/api-demo'),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildBookRow(context, "Livros em Alta", [
-                    'assets/imagens/Livro1.webp',
-                    'assets/imagens/Livro2.webp',
-                  ]),
-                  const SizedBox(height: 20),
-                  _buildBookRow(context, "Livros à Venda", [
-                    'assets/imagens/Livro3.webp',
-                    'assets/imagens/Livro4.webp',
-                  ]),
-                  const SizedBox(height: 20),
-                  _buildBookRow(context, "Livros para Troca", [
-                    'assets/imagens/Livro5.jpg',
-                    'assets/imagens/Livro6.jpg',
-                  ]),
-                  const SizedBox(height: 20),
-                  _buildBookRow(context, "Livros para Doação", [
-                    'assets/imagens/Livro7.jpg',
-                    'assets/imagens/Livro8.jpg',
-                  ]),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                BookSection(
+                  title: 'Livros em Alta',
+                  books: trendingBooks,
+                  onSelect: (b) => _openBookDetails(b, 'Livros em Alta'),
+                ),
+                const SizedBox(height: 20),
+                BookSection(
+                  title: 'Livros à Venda',
+                  books: saleBooks,
+                  onSelect: (b) => _openBookDetails(b, 'Livros à Venda'),
+                ),
+                const SizedBox(height: 20),
+                BookSection(
+                  title: 'Livros para Troca',
+                  books: swapBooks,
+                  onSelect: (b) => _openBookDetails(b, 'Livros para Troca'),
+                ),
+                const SizedBox(height: 20),
+                BookSection(
+                  title: 'Livros para Doação',
+                  books: donationBooks,
+                  onSelect: (b) => _openBookDetails(b, 'Livros para Doação'),
+                ),
+              ],
             ),
           ),
         ),
