@@ -144,17 +144,17 @@ class _BookDetailsContentState extends State<BookDetailsContent> {
         const SizedBox(height: 20),
         Text('Comentários:', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 10),
-        Expanded(
-          child: ListView(
-            children: const [
-              CommentItem(user: 'Maria', stars: 5, text: 'Amei esse livro!'),
-              CommentItem(
-                user: 'João',
-                stars: 4,
-                text: 'Muito bom, mas poderia ser menor.',
-              ),
-            ],
-          ),
+        ListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: const [
+            CommentItem(user: 'Maria', stars: 5, text: 'Amei esse livro!'),
+            CommentItem(
+              user: 'João',
+              stars: 4,
+              text: 'Muito bom, mas poderia ser menor.',
+            ),
+          ],
         ),
       ],
     );

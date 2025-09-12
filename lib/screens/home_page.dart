@@ -14,6 +14,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final ScrollController _verticalScrollController = ScrollController();
   // Dados mockados (poderiam vir de uma API futuramente)
   final List<BookModel> trendingBooks = const [
     BookModel.asset(
@@ -186,103 +187,110 @@ class _HomePageState extends State<HomePage> {
         actions: const [],
       ),
       body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: GlassPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SearchBarMolecule(
-                  onSearch: (query) async {
-                    FocusScope.of(context).unfocus();
-                    await _performSearch(query, reset: true);
-                  },
-                ),
-                const SizedBox(height: 20),
-                if (_searching)
-                  SizedBox(
-                    height: 160,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 6,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (_, __) => const BookCoverSkeleton(),
-                    ),
-                  ),
-                if (!_searching &&
-                    _lastQuery.isNotEmpty &&
-                    _searchResults.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(
-                      'Nenhum resultado encontrado para "$_lastQuery"',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                if (!_searching && _searchResults.isNotEmpty) ...[
-                  BookSection(
-                    title: 'Resultados para "$_lastQuery"',
-                    books: _searchResults,
-                    onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
-                    onEndReached: () {
-                      if (!_searching && !_loadingMore && _hasMore) {
-                        _performSearch(_lastQuery, reset: false);
-                      }
+        child: Scrollbar(
+          controller: _verticalScrollController,
+          thumbVisibility: true,
+          thickness: 6,
+          radius: const Radius.circular(8),
+          child: SingleChildScrollView(
+            controller: _verticalScrollController,
+            padding: const EdgeInsets.all(16),
+            child: GlassPanel(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SearchBarMolecule(
+                    onSearch: (query) async {
+                      FocusScope.of(context).unfocus();
+                      await _performSearch(query, reset: true);
                     },
                   ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      onPressed:
-                          () => setState(() {
-                            _searchResults = const [];
-                            _lastQuery = '';
-                            _hasMore = false;
-                            _currentPage = 1;
-                          }),
-                      icon: const Icon(Icons.clear),
-                      label: const Text('Limpar resultados'),
-                    ),
-                  ),
-                  if (_loadingMore)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
+                  const SizedBox(height: 20),
+                  if (_searching)
+                    SizedBox(
+                      height: 160,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 6,
+                        separatorBuilder: (_, __) => const SizedBox(width: 10),
+                        itemBuilder: (_, __) => const BookCoverSkeleton(),
                       ),
                     ),
+                  if (!_searching &&
+                      _lastQuery.isNotEmpty &&
+                      _searchResults.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        'Nenhum resultado encontrado para "$_lastQuery"',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  if (!_searching && _searchResults.isNotEmpty) ...[
+                    BookSection(
+                      title: 'Resultados para "$_lastQuery"',
+                      books: _searchResults,
+                      onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
+                      onEndReached: () {
+                        if (!_searching && !_loadingMore && _hasMore) {
+                          _performSearch(_lastQuery, reset: false);
+                        }
+                      },
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed:
+                            () => setState(() {
+                              _searchResults = const [];
+                              _lastQuery = '';
+                              _hasMore = false;
+                              _currentPage = 1;
+                            }),
+                        icon: const Icon(Icons.clear),
+                        label: const Text('Limpar resultados'),
+                      ),
+                    ),
+                    if (_loadingMore)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                  ],
+                  const SizedBox.shrink(),
+                  const SizedBox(height: 0),
+                  BookSection(
+                    title: 'Livros em Alta',
+                    books: trendingBooks,
+                    onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
+                  ),
                   const SizedBox(height: 20),
+                  BookSection(
+                    title: 'Livros à Venda',
+                    books: saleBooks,
+                    onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
+                  ),
+                  const SizedBox(height: 20),
+                  BookSection(
+                    title: 'Livros para Troca',
+                    books: swapBooks,
+                    onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
+                  ),
+                  const SizedBox(height: 20),
+                  BookSection(
+                    title: 'Livros para Doação',
+                    books: donationBooks,
+                    onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
+                  ),
                 ],
-                const SizedBox.shrink(),
-                const SizedBox(height: 0),
-                BookSection(
-                  title: 'Livros em Alta',
-                  books: trendingBooks,
-                  onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
-                ),
-                const SizedBox(height: 20),
-                BookSection(
-                  title: 'Livros à Venda',
-                  books: saleBooks,
-                  onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
-                ),
-                const SizedBox(height: 20),
-                BookSection(
-                  title: 'Livros para Troca',
-                  books: swapBooks,
-                  onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
-                ),
-                const SizedBox(height: 20),
-                BookSection(
-                  title: 'Livros para Doação',
-                  books: donationBooks,
-                  onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
-                ),
-              ],
+              ),
             ),
           ),
         ),
