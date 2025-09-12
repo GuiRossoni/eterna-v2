@@ -8,8 +8,6 @@ import 'screens/forgot_password_page.dart';
 import 'screens/home_page.dart';
 
 import 'screens/book_details_page.dart';
-import 'widgets/atomic_demo.dart';
-import 'screens/api_demo_page.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -71,8 +69,7 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/home': (context) => const HomePage(),
         '/book-details': (context) => const BookDetailsPage(),
-        '/atomic-demo': (context) => const AtomicDemoPage(),
-        '/api-demo': (context) => const ApiDemoPage(),
+        // Rotas de demonstração removidas
       },
     );
   }

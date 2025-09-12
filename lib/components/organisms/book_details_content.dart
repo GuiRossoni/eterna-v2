@@ -5,14 +5,16 @@ import 'book_header.dart';
 
 class BookDetailsContent extends StatefulWidget {
   final String heroTag;
-  final String imageAsset;
+  final String? imageAsset;
+  final String? imageUrl;
   final String title;
   final String synopsis;
 
   const BookDetailsContent({
     super.key,
     required this.heroTag,
-    required this.imageAsset,
+    this.imageAsset,
+    this.imageUrl,
     required this.title,
     required this.synopsis,
   });
@@ -32,6 +34,7 @@ class _BookDetailsContentState extends State<BookDetailsContent> {
         BookHeader(
           heroTag: widget.heroTag,
           imageAsset: widget.imageAsset,
+          imageUrl: widget.imageUrl,
           synopsis: widget.synopsis,
         ),
         const SizedBox(height: 20),

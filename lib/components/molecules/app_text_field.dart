@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AppTextField extends StatelessWidget {
   final String label;
@@ -8,6 +9,9 @@ class AppTextField extends StatelessWidget {
   final String? semanticLabel;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
+  final String? hintText;
 
   const AppTextField({
     super.key,
@@ -18,6 +22,9 @@ class AppTextField extends StatelessWidget {
     this.semanticLabel,
     this.obscureText = false,
     this.keyboardType,
+    this.inputFormatters,
+    this.maxLength,
+    this.hintText,
   });
 
   @override
@@ -30,7 +37,14 @@ class AppTextField extends StatelessWidget {
         validator: validator,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+        inputFormatters: inputFormatters,
+        maxLength: maxLength,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hintText,
+          prefixIcon: Icon(icon),
+          counterText: maxLength != null ? '' : null,
+        ),
       ),
     );
   }

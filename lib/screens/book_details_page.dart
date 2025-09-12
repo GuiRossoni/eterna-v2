@@ -11,8 +11,8 @@ class BookDetailsPage extends StatelessWidget {
     final title = args?['title'] as String? ?? 'Detalhes do Livro';
     final synopsis = args?['sinopse'] as String? ?? '';
     final heroTag = args?['heroTag'] as String? ?? 'book-cover';
-    final imageAsset =
-        args?['imageAsset'] as String? ?? 'assets/imagens/Livro1.webp';
+    final imageAsset = args?['imageAsset'] as String?;
+    final imageUrl = args?['imageUrl'] as String?;
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
@@ -21,6 +21,7 @@ class BookDetailsPage extends StatelessWidget {
         child: BookDetailsContent(
           heroTag: heroTag,
           imageAsset: imageAsset,
+          imageUrl: imageUrl,
           title: title,
           synopsis: synopsis,
         ),

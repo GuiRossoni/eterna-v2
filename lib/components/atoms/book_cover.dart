@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class BookCover extends StatelessWidget {
-  final String imageAsset;
+  final String? imageAsset;
+  final String? imageUrl;
   final String heroTag;
   final double width;
   final double? height;
@@ -10,11 +11,21 @@ class BookCover extends StatelessWidget {
   const BookCover({
     super.key,
     required this.imageAsset,
+    this.imageUrl,
     required this.heroTag,
     this.width = 110,
     this.height,
     required this.semanticLabel,
   });
+
+  const BookCover.network({
+    super.key,
+    required this.imageUrl,
+    required this.heroTag,
+    this.width = 110,
+    this.height,
+    required this.semanticLabel,
+  }) : imageAsset = null;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +40,10 @@ class BookCover extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             image: DecorationImage(
-              image: AssetImage(imageAsset),
+              image:
+                  imageUrl != null
+                      ? NetworkImage(imageUrl!)
+                      : AssetImage(imageAsset!) as ImageProvider,
               fit: BoxFit.cover,
             ),
           ),

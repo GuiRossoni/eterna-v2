@@ -22,7 +22,8 @@ class _SearchBarMoleculeState extends State<SearchBarMolecule> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
     setState(() => _loading = true);
     final query = _controller.text.trim();
     widget.onSearch(query);

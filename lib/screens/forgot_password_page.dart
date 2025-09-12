@@ -33,6 +33,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Recuperar Senha'),
+        leading: Semantics(
+          label: 'Voltar',
+          button: true,
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: 'Voltar',
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacementNamed(context, '/');
+              }
+            },
+          ),
+        ),
+      ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Center(
         child: GlassPanel(
@@ -59,7 +77,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   label: 'Enviar recuperação de senha',
                   child: ElevatedButton(
                     onPressed: () {
-                      if (_formKey.currentState!.validate()) {
+                      if (_formKey.currentState?.validate() ?? false) {
                         showDialog(
                           context: context,
                           builder: (context) {
