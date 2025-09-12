@@ -92,14 +92,22 @@ class PhoneInputFormatter extends TextInputFormatter {
       }
     } else if (len <= 10) {
       // 10 dígitos total => (99) 9999-9999
-      for (int i = 2; i < 6; i++) b.write(digits[i]);
+      for (int i = 2; i < 6; i++) {
+        b.write(digits[i]);
+      }
       b.write('-');
-      for (int i = 6; i < len; i++) b.write(digits[i]);
+      for (int i = 6; i < len; i++) {
+        b.write(digits[i]);
+      }
     } else {
       // 11 dígitos total => (99) 99999-9999
-      for (int i = 2; i < 7; i++) b.write(digits[i]);
+      for (int i = 2; i < 7; i++) {
+        b.write(digits[i]);
+      }
       b.write('-');
-      for (int i = 7; i < len; i++) b.write(digits[i]);
+      for (int i = 7; i < len; i++) {
+        b.write(digits[i]);
+      }
     }
     return b.toString();
   }
