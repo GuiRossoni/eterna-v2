@@ -8,15 +8,19 @@ class RatingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(5, (index) {
-        final pos = index + 1;
-        return RatingStarButton(
-          position: pos,
-          filled: pos <= rating,
-          onPressed: () => onChange(pos),
-        );
-      }),
+    return Semantics(
+      label: 'Avaliação: $rating de 5',
+      value: '$rating',
+      child: Row(
+        children: List.generate(5, (index) {
+          final pos = index + 1;
+          return RatingStarButton(
+            position: pos,
+            filled: pos <= rating,
+            onPressed: () => onChange(pos),
+          );
+        }),
+      ),
     );
   }
 }

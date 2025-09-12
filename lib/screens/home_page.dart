@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
   ];
 
   void _openBookDetails(BookModel book, String section) {
-    final heroTag = '${section}-${book.title}';
+    final heroTag = '$section-${book.title}';
     Navigator.pushNamed(
       context,
       '/book-details',

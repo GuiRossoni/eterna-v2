@@ -141,7 +141,7 @@ class AtomicDemoPage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               const Text(
-                'Acessibilidade: Todos os elementos possuem Semantics e contraste adequado.',
+                'Esta e uma pagina de teste de funcionalidades!',
                 textAlign: TextAlign.center,
               ),
             ],

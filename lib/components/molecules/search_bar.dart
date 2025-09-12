@@ -14,8 +14,9 @@ class _SearchBarMoleculeState extends State<SearchBarMolecule> {
   bool _loading = false;
 
   String? _validate(String? value) {
-    if (value == null || value.trim().isEmpty)
+    if (value == null || value.trim().isEmpty) {
       return 'Digite algo para pesquisar';
+    }
     if (value.trim().length < 3) return 'Digite pelo menos 3 caracteres';
     return null;
   }
@@ -39,6 +40,7 @@ class _SearchBarMoleculeState extends State<SearchBarMolecule> {
   Widget build(BuildContext context) {
     return Semantics(
       label: 'Barra de busca de livros',
+      container: true,
       child: Form(
         key: _formKey,
         child: Row(
@@ -54,16 +56,21 @@ class _SearchBarMoleculeState extends State<SearchBarMolecule> {
               ),
             ),
             const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: _loading ? null : _submit,
-              child:
-                  _loading
-                      ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Text('Buscar'),
+            Semantics(
+              button: true,
+              label: 'Executar busca',
+              enabled: !_loading,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _submit,
+                child:
+                    _loading
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Text('Buscar'),
+              ),
             ),
           ],
         ),

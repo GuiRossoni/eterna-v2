@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Biblioteca Virtual',
       debugShowCheckedModeBanner: false,
-      // Localizations podem ser adicionadas posteriormente quando as dependências estiverem disponíveis.
+      // Locs futuras vai aqui
       theme: ThemeData(
         colorScheme: ColorScheme.light(
           surface: AppColors.fundoClaro,
