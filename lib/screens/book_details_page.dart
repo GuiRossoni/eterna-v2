@@ -13,6 +13,10 @@ class BookDetailsPage extends StatelessWidget {
     final heroTag = args?['heroTag'] as String? ?? 'book-cover';
     final imageAsset = args?['imageAsset'] as String?;
     final imageUrl = args?['imageUrl'] as String?;
+    final workKey = args?['workKey'] as String?;
+    final authors =
+        (args?['authors'] as List?)?.cast<String>() ?? const <String>[];
+    final int? year = args?['year'] as int?;
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
@@ -24,6 +28,9 @@ class BookDetailsPage extends StatelessWidget {
           imageUrl: imageUrl,
           title: title,
           synopsis: synopsis,
+          workKey: workKey,
+          authors: authors,
+          year: year,
         ),
       ),
     );

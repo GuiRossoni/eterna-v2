@@ -85,6 +85,9 @@ class _HomePageState extends State<HomePage> {
         'title': book.title,
         'sinopse': book.synopsis,
         'heroTag': heroTag,
+        if (book.workKey != null) 'workKey': book.workKey,
+        if (book.authors.isNotEmpty) 'authors': book.authors,
+        if (book.year != null) 'year': book.year,
         if (book.imageAsset != null) 'imageAsset': book.imageAsset,
         if (book.imageUrl != null) 'imageUrl': book.imageUrl,
       },
@@ -136,6 +139,9 @@ class _HomePageState extends State<HomePage> {
                     title: r.title,
                     imageUrl: r.imageUrl,
                     synopsis: r.synopsis,
+                    authors: r.authors,
+                    workKey: r.workKey,
+                    year: r.firstPublishYear,
                   ),
                 )
                 .toList();
