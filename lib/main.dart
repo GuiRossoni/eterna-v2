@@ -69,7 +69,6 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordPage(),
         '/home': (context) => const HomePage(),
         '/book-details': (context) => const BookDetailsPage(),
-        // Rotas de demonstração removidas
       },
     );
   }

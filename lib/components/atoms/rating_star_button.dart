@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class RatingStarButton extends StatelessWidget {
   final bool filled;
   final VoidCallback onPressed;
-  final int position; // 1-based
+  final int position;
 
   const RatingStarButton({
     super.key,

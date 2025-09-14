@@ -82,7 +82,7 @@ class _BookDetailsContentState extends State<BookDetailsContent> {
           ),
           const SizedBox(height: 16),
         ],
-        // Descrição e assuntos via Open Library (quando houver workKey)
+        // Descrição e assuntos via Open Library
         if (_detailsFuture != null)
           FutureBuilder<WorkDetails?>(
             future: _detailsFuture,
