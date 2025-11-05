@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:run/screens/login_page.dart';
 import 'package:run/screens/register_page.dart';
@@ -11,14 +12,16 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          '/': (_) => const LoginPage(),
-          '/register': (_) => const RegisterPage(),
-          '/forgot-password': (_) => const ForgotPasswordPage(),
-          '/home': (_) => const HomePage(),
-        },
-        initialRoute: '/',
+      ProviderScope(
+        child: MaterialApp(
+          routes: {
+            '/': (_) => const LoginPage(),
+            '/register': (_) => const RegisterPage(),
+            '/forgot-password': (_) => const ForgotPasswordPage(),
+            '/home': (_) => const HomePage(),
+          },
+          initialRoute: '/',
+        ),
       ),
     );
 
@@ -106,12 +109,14 @@ void main() {
     expect(users.any((u) => u['username'] == 'inexistente'), isFalse);
 
     await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          '/': (_) => const LoginPage(),
-          '/home': (_) => const HomePage(),
-        },
-        initialRoute: '/',
+      ProviderScope(
+        child: MaterialApp(
+          routes: {
+            '/': (_) => const LoginPage(),
+            '/home': (_) => const HomePage(),
+          },
+          initialRoute: '/',
+        ),
       ),
     );
 

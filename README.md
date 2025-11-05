@@ -34,6 +34,25 @@
 
 Observação: Páginas de demonstração antigas foram removidas da navegação para focar no app principal.
 
+## Arquitetura e Organização
+
+O projeto adota Atomic Design para UI e foi iniciado o refino para princípios da Clean Architecture (UI/Presentation, Domain, Data) com Riverpod para gerenciamento de estado.
+
+Camadas e principais arquivos:
+
+- Presentation/UI
+	- `lib/screens/*` (páginas)
+	- `lib/components/*` (Atomic Design)
+	- Estado/DI: `lib/presentation/state/providers.dart` (providers, `SearchController` e `SearchState`)
+- Domain
+	- Repositório: `lib/domain/repositories/books_repository.dart`
+	- Casos de uso: `lib/domain/usecases/search_books.dart`, `lib/domain/usecases/get_work_details.dart`
+- Data
+	- Implementação: `lib/data/repositories/books_repository_impl.dart`
+	- Cliente HTTP: `lib/services/book_service.dart`
+
+O app inicializa com `ProviderScope` em `lib/main.dart` e as telas consomem providers conforme necessário.
+
 ## Onde encontrar (arquivos principais)
 
 - Tema e UI base: `lib/widgets/shared.dart` (inclui `GlassPanel` e paleta).

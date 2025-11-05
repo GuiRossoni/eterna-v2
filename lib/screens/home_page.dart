@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:run/presentation/state/providers.dart';
 import '../widgets/shared.dart';
 import '../models/book_model.dart';
 import '../components/organisms/book_section.dart';
 import '../components/molecules/search_bar.dart';
-import '../services/book_service.dart';
 import '../components/atoms/book_cover_skeleton.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   final ScrollController _verticalScrollController = ScrollController();
   // Dados mockados (poderiam vir de uma API futuramente)
   final List<BookModel> trendingBooks = const [
@@ -68,15 +69,7 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
-  // Resultados dinâmicos de busca (Open Library)
-  List<BookModel> _searchResults = const [];
-  bool _searching = false;
-  bool _loadingMore = false;
-  String _lastQuery = '';
-  final Map<String, List<BookModel>> _cache = {};
-  int _currentPage = 1;
-  final int _pageSize = 12;
-  bool _hasMore = false;
+  // Estado de busca agora via Riverpod (SearchController)
 
   void _openBookDetails(BookModel book, String heroTag) {
     Navigator.pushNamed(
@@ -95,87 +88,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<BookService> _loadService() async {
-    // Poderia injetar via locator; aqui retornamos instância simples
-    return BookService();
-  }
-
-  Future<void> _performSearch(String query, {bool reset = true}) async {
-    if (query.trim().isEmpty) return;
-    if (!reset && _loadingMore) return; // evita chamadas concorrentes
-    if (reset) {
-      setState(() {
-        _searching = true;
-        _loadingMore = false;
-        _lastQuery = query;
-        _currentPage = 1;
-        _hasMore = false;
-        _searchResults = const [];
-      });
-    } else {
-      setState(() {
-        _loadingMore = true;
-      });
-    }
-
-    try {
-      if (reset && _cache.containsKey(query)) {
-        final cached = _cache[query]!;
-        setState(() {
-          _searchResults = cached;
-          _hasMore = cached.length >= _pageSize;
-        });
-      } else {
-        final svc = await _loadService();
-        final pageToLoad = reset ? 1 : (_currentPage + 1);
-        final items = await svc.search(
-          query,
-          limit: _pageSize,
-          page: pageToLoad,
-        );
-        final mapped =
-            items
-                .map(
-                  (r) => BookModel.network(
-                    title: r.title,
-                    imageUrl: r.imageUrl,
-                    synopsis: r.synopsis,
-                    authors: r.authors,
-                    workKey: r.workKey,
-                    year: r.firstPublishYear,
-                  ),
-                )
-                .toList();
-        setState(() {
-          if (reset) {
-            _searchResults = mapped;
-            _cache[query] = mapped; // cache apenas da primeira página
-            _currentPage = 1;
-          } else {
-            _searchResults = List.of(_searchResults)..addAll(mapped);
-            _currentPage = pageToLoad;
-          }
-          _hasMore = mapped.length >= _pageSize;
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro na busca: $e')));
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        if (reset) {
-          _searching = false;
-        } else {
-          _loadingMore = false;
-        }
-      });
-    }
-  }
+  // Busca movida para SearchController (Riverpod)
 
   @override
   Widget build(BuildContext context) {
+    final searchState = ref.watch(searchControllerProvider);
+    final searchCtrl = ref.read(searchControllerProvider.notifier);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Biblioteca Virtual"),
@@ -202,11 +120,11 @@ class _HomePageState extends State<HomePage> {
                   SearchBarMolecule(
                     onSearch: (query) async {
                       FocusScope.of(context).unfocus();
-                      await _performSearch(query, reset: true);
+                      await searchCtrl.search(query);
                     },
                   ),
                   const SizedBox(height: 20),
-                  if (_searching)
+                  if (searchState.loading)
                     SizedBox(
                       height: 160,
                       child: ListView.separated(
@@ -216,42 +134,39 @@ class _HomePageState extends State<HomePage> {
                         itemBuilder: (_, __) => const BookCoverSkeleton(),
                       ),
                     ),
-                  if (!_searching &&
-                      _lastQuery.isNotEmpty &&
-                      _searchResults.isEmpty)
+                  if (!searchState.loading &&
+                      searchState.query.isNotEmpty &&
+                      searchState.results.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Text(
-                        'Nenhum resultado encontrado para "$_lastQuery"',
+                        'Nenhum resultado encontrado para "${searchState.query}"',
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
-                  if (!_searching && _searchResults.isNotEmpty) ...[
+                  if (!searchState.loading &&
+                      searchState.results.isNotEmpty) ...[
                     BookSection(
-                      title: 'Resultados para "$_lastQuery"',
-                      books: _searchResults,
+                      title: 'Resultados para "${searchState.query}"',
+                      books: searchState.results,
                       onSelect: (b, heroTag) => _openBookDetails(b, heroTag),
                       onEndReached: () {
-                        if (!_searching && !_loadingMore && _hasMore) {
-                          _performSearch(_lastQuery, reset: false);
+                        if (!searchState.loading &&
+                            !searchState.loadingMore &&
+                            searchState.hasMore) {
+                          searchCtrl.loadMore();
                         }
                       },
                     ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton.icon(
-                        onPressed:
-                            () => setState(() {
-                              _searchResults = const [];
-                              _lastQuery = '';
-                              _hasMore = false;
-                              _currentPage = 1;
-                            }),
+                        onPressed: () => searchCtrl.clear(),
                         icon: const Icon(Icons.clear),
                         label: const Text('Limpar resultados'),
                       ),
                     ),
-                    if (_loadingMore)
+                    if (searchState.loadingMore)
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8),
                         child: Center(

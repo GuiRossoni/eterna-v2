@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../molecules/rating_bar.dart';
 import '../molecules/comment_item.dart';
 import 'book_header.dart';
 import '../../services/book_service.dart';
+import '../../presentation/state/providers.dart';
 
-class BookDetailsContent extends StatefulWidget {
+class BookDetailsContent extends ConsumerStatefulWidget {
   final String heroTag;
   final String? imageAsset;
   final String? imageUrl;
@@ -27,23 +29,20 @@ class BookDetailsContent extends StatefulWidget {
   });
 
   @override
-  State<BookDetailsContent> createState() => _BookDetailsContentState();
+  ConsumerState<BookDetailsContent> createState() => _BookDetailsContentState();
 }
 
-class _BookDetailsContentState extends State<BookDetailsContent> {
+class _BookDetailsContentState extends ConsumerState<BookDetailsContent> {
   int rating = 0;
-  Future<WorkDetails?>? _detailsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.workKey != null && widget.workKey!.isNotEmpty) {
-      _detailsFuture = BookService().fetchWorkDetails(widget.workKey!);
-    }
-  }
+  // Detalhes agora vêm via Riverpod (workDetailsProvider)
 
   @override
   Widget build(BuildContext context) {
+    final workKey = widget.workKey ?? '';
+    final detailsAsync =
+        workKey.isEmpty
+            ? const AsyncValue<WorkDetails?>.data(null)
+            : ref.watch(workDetailsProvider(workKey));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -83,63 +82,62 @@ class _BookDetailsContentState extends State<BookDetailsContent> {
           const SizedBox(height: 16),
         ],
         // Descrição e assuntos via Open Library
-        if (_detailsFuture != null)
-          FutureBuilder<WorkDetails?>(
-            future: _detailsFuture,
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: LinearProgressIndicator(minHeight: 2),
+        Builder(
+          builder: (context) {
+            return detailsAsync.when(
+              data: (details) {
+                if (details == null) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (details.description != null &&
+                        details.description!.isNotEmpty) ...[
+                      Text(
+                        'Descrição',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(details.description!),
+                      const SizedBox(height: 12),
+                    ],
+                    if (details.subjects.isNotEmpty) ...[
+                      Text(
+                        'Assuntos',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children:
+                            details.subjects
+                                .take(12)
+                                .map((s) => Chip(label: Text(s)))
+                                .toList(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ],
                 );
-              }
-              if (snap.hasError) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'Não foi possível carregar mais detalhes.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: Colors.redAccent),
+              },
+              loading:
+                  () => const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: LinearProgressIndicator(minHeight: 2),
                   ),
-                );
-              }
-              final details = snap.data;
-              if (details == null) return const SizedBox.shrink();
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (details.description != null &&
-                      details.description!.isNotEmpty) ...[
-                    Text(
-                      'Descrição',
-                      style: Theme.of(context).textTheme.titleMedium,
+              error:
+                  (_, __) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'Não foi possível carregar mais detalhes.',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.redAccent),
                     ),
-                    const SizedBox(height: 6),
-                    Text(details.description!),
-                    const SizedBox(height: 12),
-                  ],
-                  if (details.subjects.isNotEmpty) ...[
-                    Text(
-                      'Assuntos',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children:
-                          details.subjects
-                              .take(12)
-                              .map((s) => Chip(label: Text(s)))
-                              .toList(),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ],
-              );
-            },
-          ),
+                  ),
+            );
+          },
+        ),
         RatingBar(rating: rating, onChange: (r) => setState(() => rating = r)),
         const SizedBox(height: 20),
         Text('Comentários:', style: Theme.of(context).textTheme.headlineSmall),

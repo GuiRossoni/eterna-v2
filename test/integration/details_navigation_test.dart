@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:run/models/book_model.dart';
 import 'package:run/components/organisms/book_section.dart';
@@ -17,25 +18,27 @@ void main() {
     ];
 
     await tester.pumpWidget(
-      MaterialApp(
-        routes: {'/book-details': (_) => const BookDetailsPage()},
-        home: Scaffold(
-          appBar: AppBar(title: const Text('Teste')),
-          body: BookSection(
-            title: 'Livros em Alta',
-            books: books,
-            onSelect: (b, hero) {
-              Navigator.pushNamed(
-                tester.element(find.byType(BookSection)),
-                '/book-details',
-                arguments: {
-                  'title': b.title,
-                  'sinopse': b.synopsis,
-                  'heroTag': hero,
-                  'imageAsset': b.imageAsset,
-                },
-              );
-            },
+      ProviderScope(
+        child: MaterialApp(
+          routes: {'/book-details': (_) => const BookDetailsPage()},
+          home: Scaffold(
+            appBar: AppBar(title: const Text('Teste')),
+            body: BookSection(
+              title: 'Livros em Alta',
+              books: books,
+              onSelect: (b, hero) {
+                Navigator.pushNamed(
+                  tester.element(find.byType(BookSection)),
+                  '/book-details',
+                  arguments: {
+                    'title': b.title,
+                    'sinopse': b.synopsis,
+                    'heroTag': hero,
+                    'imageAsset': b.imageAsset,
+                  },
+                );
+              },
+            ),
           ),
         ),
       ),
