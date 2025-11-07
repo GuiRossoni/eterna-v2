@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'widgets/shared.dart';
 import 'screens/login_page.dart';
@@ -25,44 +24,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Biblioteca Virtual',
       debugShowCheckedModeBanner: false,
-      // Locs futuras vai aqui
-      theme: ThemeData(
-        colorScheme: ColorScheme.light(
-          surface: AppColors.fundoClaro,
-          primary: AppColors.acentoPrincipal,
-          secondary: AppColors.acentoSecundario,
-          error: AppColors.alerta,
-        ),
-        textTheme: TextTheme(
-          headlineLarge: GoogleFonts.dmSerifDisplay(
-            color: AppColors.textoPrincipal,
-            fontSize: 32,
-          ),
-          headlineSmall: GoogleFonts.dmSerifDisplay(
-            color: AppColors.textoPrincipal,
-            fontSize: 22,
-          ),
-          bodyMedium: GoogleFonts.inter(
-            color: AppColors.textoPrincipal,
-            fontSize: 16,
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          filled: true,
-          fillColor: const Color.fromRGBO(255, 255, 255, 0.6),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.acentoPrincipal,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      ),
+      // Tema atualizado para paleta pastel
+      theme: buildEternaTheme(),
       initialRoute: '/',
       routes: {
         '/': (context) => const LoginPage(),
