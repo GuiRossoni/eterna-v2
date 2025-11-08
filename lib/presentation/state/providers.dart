@@ -5,6 +5,7 @@ import 'package:run/domain/repositories/books_repository.dart';
 import 'package:run/domain/usecases/search_books.dart';
 import 'package:run/domain/usecases/get_work_details.dart';
 import 'package:run/models/book_model.dart';
+import 'cart.dart';
 
 // Infra
 final bookServiceProvider = Provider<BookService>((ref) => BookService());
@@ -156,3 +157,6 @@ final workDetailsProvider = FutureProvider.family
       final usecase = ref.read(getWorkDetailsUseCaseProvider);
       return usecase(workKey);
     });
+
+// Cart (re-export for central access)
+final cartStateProvider = cartProvider;

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "635822590769",
+    "project_id": "eterna-b2afd",
+    "storage_bucket": "eterna-b2afd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635822590769:android:00208f085241eef5bfbe10",
+        "android_client_info": {
+          "package_name": "com.example.run"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClRafyo1V8vXYQjhK2CqgQgi_L-DTGths"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635822590769:android:cf8c59d824a498c3bfbe10",
+        "android_client_info": {
+          "package_name": "eterna.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClRafyo1V8vXYQjhK2CqgQgi_L-DTGths"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

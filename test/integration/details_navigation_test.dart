@@ -44,8 +44,15 @@ void main() {
       ),
     );
 
-    // Tocar no primeiro card
-    await tester.tap(find.text('Livro 1'));
+    // Tocar no primeiro card (evita ambiguidade escolhendo o widget dentro do carrossel)
+    final listItem =
+        find
+            .descendant(
+              of: find.byType(BookSection),
+              matching: find.text('Livro 1'),
+            )
+            .first;
+    await tester.tap(listItem);
     await tester.pumpAndSettle();
 
     // Deve mostrar a AppBar com o título e seção de comentários

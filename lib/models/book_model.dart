@@ -6,6 +6,7 @@ class BookModel {
   final List<String> authors;
   final String? workKey;
   final int? year;
+  final double? price; // preço opcional
 
   const BookModel.asset({
     required this.title,
@@ -14,6 +15,7 @@ class BookModel {
     this.authors = const [],
     this.workKey,
     this.year,
+    this.price,
   }) : imageUrl = null;
 
   const BookModel.network({
@@ -23,6 +25,7 @@ class BookModel {
     this.authors = const [],
     this.workKey,
     this.year,
+    this.price,
   }) : imageAsset = null;
 
   bool get isNetwork => imageUrl != null && imageUrl!.isNotEmpty;

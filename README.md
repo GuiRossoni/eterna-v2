@@ -72,6 +72,8 @@ O app inicializa com `ProviderScope` em `lib/main.dart` e as telas consomem prov
 
 - `google_fonts` para tipografia.
 - `http` para requisições REST.
+ - `flutter_riverpod` para estado e injeção.
+ - `firebase_core` / `firebase_auth` para autenticação (registrar, login, reset de senha) com fallback local.
 
 ## Notas técnicas
 
@@ -79,6 +81,22 @@ O app inicializa com `ProviderScope` em `lib/main.dart` e as telas consomem prov
 - Scrollbar: sempre ligada ao mesmo `ScrollController` do widget rolável correspondente.
 - Máscaras: `DateInputFormatter` e `PhoneInputFormatter` preservam a posição do cursor.
 - Cache de busca: primeira página por termo (balanceando simplicidade e performance).
+
+## 🔐 Firebase Auth (Setup)
+
+O projeto agora tenta usar Firebase Authentication (registro / login / reset) antes de cair em um serviço local simples.
+
+### Sobre inicialização preguiçosa
+`FirebaseAuthService` só acessa `FirebaseAuth.instance` após verificar se `Firebase.initializeApp()` foi bem-sucedido, evitando erros em builds Web sem configuração (`TypeError: ... JavaScriptObject`). Se Firebase não estiver pronto, os métodos retornam `null` silenciosamente e o fallback local é usado.
+
+### Recuperação de senha
+`ForgotPasswordPage` envia e-mail de reset via Firebase quando configurado; SMS é placeholder (necessita Phone Auth configurado e verificação). 
+
+### Próximos passos sugeridos
+- Implementar Phone Auth (verificação SMS) se necessário.
+- Adicionar testes widget cobrindo fluxo de reset de senha.
+- Centralizar mensagens de erro/sucesso em um serviço de UI para internacionalização futura.
+- Persistir carrinho entre sessões (ex.: `shared_preferences` ou Firestore).
 
 # 📚 Eterna Livraria
 

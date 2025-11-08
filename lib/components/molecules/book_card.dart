@@ -40,24 +40,31 @@ class _BookCardState extends State<BookCard> {
               final hasAsset =
                   widget.book.imageAsset != null &&
                   widget.book.imageAsset!.isNotEmpty;
+              final double coverWidth = 110;
+              final double coverHeight =
+                  120; // Ajustado para evitar overflow no tile (h≈164)
               final Widget cover =
                   hasNetwork
                       ? BookCover.network(
                         imageUrl: widget.book.imageUrl!,
                         heroTag: widget.heroTag,
                         semanticLabel: 'Capa do ${widget.book.title}',
+                        width: coverWidth,
+                        height: coverHeight,
                       )
                       : hasAsset
                       ? BookCover(
                         imageAsset: widget.book.imageAsset!,
                         heroTag: widget.heroTag,
                         semanticLabel: 'Capa do ${widget.book.title}',
+                        width: coverWidth,
+                        height: coverHeight,
                       )
                       : Hero(
                         tag: widget.heroTag,
                         child: Container(
-                          width: 110,
-                          height: 110 * 1.45,
+                          width: coverWidth,
+                          height: coverHeight,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
@@ -88,7 +95,7 @@ class _BookCardState extends State<BookCard> {
                       cover,
                       const SizedBox(height: 6),
                       SizedBox(
-                        width: 110,
+                        width: coverWidth,
                         child: Text(
                           widget.book.title,
                           maxLines: 2,

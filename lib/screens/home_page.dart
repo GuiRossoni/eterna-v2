@@ -102,7 +102,51 @@ class _HomePageState extends ConsumerState<HomePage> {
           onPressed: () => Navigator.pushNamed(context, '/'),
           tooltip: 'Voltar para login',
         ),
-        actions: const [],
+        actions: [
+          // Carrinho
+          Consumer(
+            builder: (context, ref, _) {
+              final cart = ref.watch(cartStateProvider);
+              return Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined),
+                    tooltip: 'Carrinho',
+                    onPressed: () => Navigator.pushNamed(context, '/cart'),
+                  ),
+                  if (cart.count > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondary,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          cart.count.toString(),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'Perfil',
+            onPressed: () => Navigator.pushNamed(context, '/profile'),
+          ),
+        ],
       ),
       body: Center(
         child: Scrollbar(

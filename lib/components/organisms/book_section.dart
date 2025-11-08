@@ -7,6 +7,7 @@ class BookSection extends StatefulWidget {
   final List<BookModel> books;
   final void Function(BookModel, String heroTag) onSelect;
   final VoidCallback? onEndReached;
+  final void Function(BookModel)? onAddToCart;
 
   const BookSection({
     super.key,
@@ -14,6 +15,7 @@ class BookSection extends StatefulWidget {
     required this.books,
     required this.onSelect,
     this.onEndReached,
+    this.onAddToCart,
   });
 
   @override
@@ -66,11 +68,46 @@ class _BookSectionState extends State<BookSection> {
                 itemBuilder: (context, index) {
                   final book = widget.books[index];
                   final heroTag = '${widget.title}-${book.title}-$index';
-                  return BookCard(
-                    sectionTitle: widget.title,
-                    heroTag: heroTag,
-                    book: book,
-                    onTap: () => widget.onSelect(book, heroTag),
+                  return SizedBox(
+                    width: 150,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: BookCard(
+                            sectionTitle: widget.title,
+                            heroTag: heroTag,
+                            book: book,
+                            onTap: () => widget.onSelect(book, heroTag),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        if (book.price != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                'R\$ ${book.price!.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (widget.onAddToCart != null)
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.add_shopping_cart,
+                                    size: 20,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  tooltip: 'Adicionar ao carrinho',
+                                  onPressed: () => widget.onAddToCart!(book),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
                   );
                 },
               ),

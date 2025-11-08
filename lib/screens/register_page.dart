@@ -4,6 +4,7 @@ import '../widgets/shared.dart';
 import '../components/molecules/app_text_field.dart';
 import '../components/atoms/app_button.dart';
 import '../services/auth_service.dart';
+import '../services/firebase_auth_service.dart';
 
 // Formata entrada para o padrão dd/mm/aaaa automaticamente
 class DateInputFormatter extends TextInputFormatter {
@@ -152,6 +153,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _celularController = TextEditingController();
   final _senhaController = TextEditingController();
   final _auth = AuthService();
+  // Instancia FirebaseAuthService de forma lazy dentro do submit para evitar erros em web sem config.
   bool _loading = false;
 
   @override
@@ -250,24 +252,48 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _loading = true);
-    final ok = await _auth.register(
-      _emailController.text.trim(),
-      _usuarioController.text.trim(),
-      _senhaController.text,
-    );
-    setState(() => _loading = false);
-    if (!ok) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('E-mail ou usuário já existe.')),
-      );
-      return;
+    final email = _emailController.text.trim();
+    final password = _senhaController.text;
+    final displayName = _nomeController.text.trim();
+    bool success = false;
+    // Tenta Firebase primeiro se inicializado; se não, fallback local
+    try {
+      final firebaseReady = await FirebaseAuthService.ensureInitialized();
+      if (firebaseReady) {
+        final cred = await FirebaseAuthService().register(email, password);
+        if (displayName.isNotEmpty) {
+          await cred.user?.updateDisplayName(displayName);
+        }
+        success = true;
+      } else {
+        final okLocal = await _auth.register(
+          email,
+          _usuarioController.text.trim(),
+          password,
+        );
+        success = okLocal;
+        if (!okLocal && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('E-mail ou usuário já existe.')),
+          );
+        }
+      }
+    } catch (e) {
+      // Erros de Firebase (ex.: email em uso, provedor desabilitado etc.)
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Falha no cadastro: $e')));
+      }
     }
+    setState(() => _loading = false);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Usuário cadastrado! Faça login.')),
-    );
-    Navigator.pop(context);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuário cadastrado! Faça login.')),
+      );
+      Navigator.pop(context);
+    }
   }
 
   @override

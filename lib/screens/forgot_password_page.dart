@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/shared.dart';
+import '../services/firebase_auth_service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -76,23 +77,58 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   button: true,
                   label: 'Enviar recuperação de senha',
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              content: const Text(
-                                "Um email ou SMS foi enviado para redefinir sua senha.",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text("OK"),
+                    onPressed: () async {
+                      if (!(_formKey.currentState?.validate() ?? false)) return;
+                      final value = _controller.text.trim();
+                      if (value.contains('@')) {
+                        try {
+                          final ok =
+                              await FirebaseAuthService.ensureInitialized();
+                          if (!ok) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Firebase não está configurado para web/este ambiente.',
                                 ),
-                              ],
+                              ),
                             );
-                          },
+                            return;
+                          }
+                          await FirebaseAuthService().sendPasswordReset(value);
+                          if (!mounted) return;
+                          showDialog(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  content: Text(
+                                    'E-mail de recuperação enviado para $value',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Falha ao enviar recuperação: $e'),
+                            ),
+                          );
+                        }
+                      } else {
+                        // Placeholder: SMS não implementado
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Recuperação por SMS não está configurada.',
+                            ),
+                          ),
                         );
                       }
                     },
