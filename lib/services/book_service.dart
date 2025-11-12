@@ -136,6 +136,49 @@ class BookService {
       year: year,
     );
   }
+
+  // Fetch books by subject: https://openlibrary.org/subjects/{subject}.json
+  Future<List<RemoteBook>> fetchBySubject(
+    String subject, {
+    int limit = 12,
+    int offset = 0,
+  }) async {
+    final safeSubject = subject.trim().toLowerCase().replaceAll(' ', '_');
+    final uri = Uri.parse(
+      '$_base/subjects/$safeSubject.json?limit=$limit&offset=$offset',
+    );
+    final resp = await http.get(uri);
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao buscar assunto "$subject": ${resp.statusCode}');
+    }
+    final data = json.decode(resp.body) as Map<String, dynamic>;
+    final works =
+        (data['works'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+    return works.map((w) {
+      final title = (w['title'] ?? '').toString();
+      final coverId = w['cover_id'];
+      final imageUrl = coverId != null ? '$_covers/b/id/$coverId-M.jpg' : '';
+      final workKey = (w['key'] ?? '') as String?; // e.g., /works/OL123W
+      final authors =
+          (w['authors'] as List?)
+              ?.map((a) => (a['name'] ?? '').toString())
+              .toList() ??
+          const [];
+      final int? firstPublishYear =
+          w['first_publish_year'] is int
+              ? w['first_publish_year'] as int
+              : null;
+      final synopsis = 'Livro do assunto "$subject" na Open Library.';
+      return RemoteBook(
+        title: title,
+        imageUrl: imageUrl,
+        synopsis: synopsis,
+        workKey: workKey,
+        authors: authors,
+        firstPublishYear: firstPublishYear,
+      );
+    }).toList();
+  }
 }
 
 class WorkDetails {

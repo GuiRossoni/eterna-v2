@@ -8,6 +8,8 @@ class BookSection extends StatefulWidget {
   final void Function(BookModel, String heroTag) onSelect;
   final VoidCallback? onEndReached;
   final void Function(BookModel)? onAddToCart;
+  final void Function(BookModel)? onEditListing;
+  final void Function(BookModel)? onDeleteListing;
 
   const BookSection({
     super.key,
@@ -16,6 +18,8 @@ class BookSection extends StatefulWidget {
     required this.onSelect,
     this.onEndReached,
     this.onAddToCart,
+    this.onEditListing,
+    this.onDeleteListing,
   });
 
   @override
@@ -29,6 +33,29 @@ class _BookSectionState extends State<BookSection> {
   void dispose() {
     _hController.dispose();
     super.dispose();
+  }
+
+  String _buildMeta(BookModel book) {
+    if (!book.isListing) return '';
+    final user = book.userDisplayName ?? 'Usuário';
+    final time = book.timeAgo();
+    return 'por $user $time';
+  }
+
+  String _buildPrimaryLabel(BookModel book) {
+    if (book.listingType == 'swap' && (book.exchangeWanted ?? '').isNotEmpty) {
+      return 'Troca por: ${book.exchangeWanted}';
+    }
+    if (book.listingType == 'donation') {
+      return 'Doação';
+    }
+    if (book.listingType == 'sale' && book.price != null) {
+      return 'R\$ ${book.price!.toStringAsFixed(2)}';
+    }
+    if (book.price != null) {
+      return 'R\$ ${book.price!.toStringAsFixed(2)}';
+    }
+    return '';
   }
 
   @override
@@ -68,8 +95,10 @@ class _BookSectionState extends State<BookSection> {
                 itemBuilder: (context, index) {
                   final book = widget.books[index];
                   final heroTag = '${widget.title}-${book.title}-$index';
+                  final primary = _buildPrimaryLabel(book);
+                  final meta = _buildMeta(book);
                   return SizedBox(
-                    width: 150,
+                    width: 160,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -82,30 +111,52 @@ class _BookSectionState extends State<BookSection> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        if (book.price != null) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(
-                                'R\$ ${book.price!.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                [
+                                  primary,
+                                  meta,
+                                ].where((e) => e.isNotEmpty).join(' • '),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 11),
                               ),
-                              const Spacer(),
-                              if (widget.onAddToCart != null)
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.add_shopping_cart,
-                                    size: 20,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  tooltip: 'Adicionar ao carrinho',
-                                  onPressed: () => widget.onAddToCart!(book),
+                            ),
+                            if (widget.onAddToCart != null &&
+                                book.listingType == 'sale' &&
+                                book.price != null)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.add_shopping_cart,
+                                  size: 20,
                                 ),
-                            ],
-                          ),
-                        ],
+                                padding: EdgeInsets.zero,
+                                tooltip: 'Adicionar ao carrinho',
+                                onPressed: () => widget.onAddToCart!(book),
+                              ),
+                            if (widget.onEditListing != null && book.isListing)
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                padding: EdgeInsets.zero,
+                                tooltip: 'Editar anúncio',
+                                onPressed: () => widget.onEditListing!(book),
+                              ),
+                            if (widget.onDeleteListing != null &&
+                                book.isListing)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  size: 20,
+                                ),
+                                color: Colors.redAccent,
+                                padding: EdgeInsets.zero,
+                                tooltip: 'Remover anúncio',
+                                onPressed: () => widget.onDeleteListing!(book),
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   );

@@ -32,52 +32,21 @@ void main() {
 
     expect(find.text('Cadastro'), findsWidgets);
 
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Nome Completo'),
-      'Usuário Teste',
-    );
+    // Novo fluxo simplificado: Nome de Usuário, Email, Senha, Confirmar Senha
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Nome de Usuário'),
       'user_teste',
     );
-
-    final sexoFinder = find.byWidgetPredicate(
-      (w) => w is DropdownButtonFormField,
-      description: 'DropdownButtonFormField (Sexo)',
-    );
-    await tester.ensureVisible(sexoFinder.first);
-    await tester.tap(sexoFinder.first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Não informar').last);
-    await tester.pumpAndSettle();
-
-    // Data de Nascimento (máscara dd/mm/aaaa)
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Data de Nascimento'),
-      '01011990',
-    );
-
-    // Endereço
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Endereço'),
-      'Rua Teste, 123',
-    );
-
-    // Email
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Email'),
       'teste@example.com',
     );
-
-    // Celular (11 dígitos)
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Celular'),
-      '11999999999',
-    );
-
-    // Senha
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Senha'),
+      'segredo',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Confirmar Senha'),
       'segredo',
     );
 
@@ -88,8 +57,8 @@ void main() {
     expect(find.text('Login'), findsOneWidget);
 
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Email ou Usuário'),
-      'user_teste',
+      find.widgetWithText(TextFormField, 'Email'),
+      'teste@example.com',
     );
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Senha'),
@@ -121,8 +90,8 @@ void main() {
     );
 
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Email ou Usuário'),
-      'inexistente',
+      find.widgetWithText(TextFormField, 'Email'),
+      'inexistente@example.com',
     );
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Senha'),

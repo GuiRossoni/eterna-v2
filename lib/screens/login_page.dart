@@ -13,7 +13,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _auth = AuthService();
-  // Evita instanciar FirebaseAuthService antes de garantir inicialização.
 
   @override
   Widget build(BuildContext context) {
@@ -34,13 +33,13 @@ class _LoginPageState extends State<LoginPage> {
                       label: 'Logo do app',
                       child: Image.asset(
                         'assets/logo.png',
-                        width: 60,
-                        height: 60,
+                        width: 260,
+                        height: 260,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Text(
-                      "Login",
+                      'Login',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                   ],
@@ -53,48 +52,45 @@ class _LoginPageState extends State<LoginPage> {
                       label: 'Logo do app',
                       child: Image.asset(
                         'assets/logo.png',
-                        width: 80,
-                        height: 80,
+                        width: 350,
+                        height: 175,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "Login",
+                      'Login',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                   ],
                 ),
               const SizedBox(height: 20),
               LoginForm(
-                onSubmit: (user, pass) async {
-                  // Tenta Firebase (apenas email) se contiver '@'
-                  if (user.contains('@')) {
-                    try {
-                      final firebaseReady =
-                          await FirebaseAuthService.ensureInitialized();
-                      if (firebaseReady) {
-                        final cred = await FirebaseAuthService().signIn(
-                          user,
-                          pass,
-                        );
-                        if (cred.user != null) {
-                          if (mounted) {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          }
-                          return true;
+                onSubmit: (email, pass) async {
+                  // Tenta Firebase com e-mail primeiro
+                  try {
+                    final firebaseReady =
+                        await FirebaseAuthService.ensureInitialized();
+                    if (firebaseReady) {
+                      final cred = await FirebaseAuthService().signIn(
+                        email,
+                        pass,
+                      );
+                      if (cred.user != null) {
+                        if (mounted) {
+                          Navigator.pushReplacementNamed(context, '/home');
                         }
-                      }
-                    } catch (e) {
-                      // Mostra erro de Firebase (ex: usuário inexistente, senha errada)
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Erro de login Firebase: $e')),
-                        );
+                        return true;
                       }
                     }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Erro de login Firebase: $e')),
+                      );
+                    }
                   }
-                  // Fallback local (username ou Firebase indisponível)
-                  final ok = await _auth.login(user, pass);
+                  // Fallback local
+                  final ok = await _auth.login(email, pass);
                   if (ok && mounted) {
                     Navigator.pushReplacementNamed(context, '/home');
                   }

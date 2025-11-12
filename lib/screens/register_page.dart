@@ -144,81 +144,29 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nomeController = TextEditingController();
   final _usuarioController = TextEditingController();
-  String? _sexoSelecionado;
-  final _dataNascimentoController = TextEditingController();
-  final _enderecoController = TextEditingController();
   final _emailController = TextEditingController();
-  final _celularController = TextEditingController();
   final _senhaController = TextEditingController();
+  final _senhaConfirmController = TextEditingController();
   final _auth = AuthService();
   // Instancia FirebaseAuthService de forma lazy dentro do submit para evitar erros em web sem config.
   bool _loading = false;
+  String? _passwordError;
+
+  @override
+  void initState() {
+    super.initState();
+    _senhaController.addListener(_validatePasswordsLive);
+    _senhaConfirmController.addListener(_validatePasswordsLive);
+  }
 
   @override
   void dispose() {
-    _nomeController.dispose();
     _usuarioController.dispose();
-    _dataNascimentoController.dispose();
-    _enderecoController.dispose();
     _emailController.dispose();
-    _celularController.dispose();
     _senhaController.dispose();
+    _senhaConfirmController.dispose();
     super.dispose();
-  }
-
-  String? _validateDataNascimento(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Informe a Data de Nascimento';
-    }
-    final v = value.trim();
-    final regex = RegExp(r'^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$');
-    if (!regex.hasMatch(v)) {
-      return 'Use o formato dd/mm/aaaa';
-    }
-    final parts = v.split('/');
-    final day = int.tryParse(parts[0]);
-    final month = int.tryParse(parts[1]);
-    final year = int.tryParse(parts[2]);
-    if (day == null || month == null || year == null) {
-      return 'Data inválida';
-    }
-    final dt = DateTime(year, month, day);
-    if (dt.year != year || dt.month != month || dt.day != day) {
-      return 'Data inválida';
-    }
-    final today = DateTime.now();
-    final endOfToday = DateTime(today.year, today.month, today.day, 23, 59, 59);
-    if (dt.isAfter(endOfToday)) {
-      return 'Data não pode ser no futuro';
-    }
-    if (year < 1900) {
-      return 'Ano inválido';
-    }
-    return null;
-  }
-
-  String? _validateEndereco(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Informe o Endereço';
-    }
-    final enderecoRegex = RegExp(r'^[a-zA-Z0-9\s,.-]+$');
-    if (!enderecoRegex.hasMatch(value)) {
-      return 'Endereço não pode conter caracteres especiais';
-    }
-    return null;
-  }
-
-  String? _validateCelular(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Informe o Celular';
-    }
-    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.length < 10 || digits.length > 11) {
-      return 'Celular deve ter 10 ou 11 dígitos';
-    }
-    return null;
   }
 
   String? _validateNotEmpty(String? value, String label) {
@@ -249,28 +197,61 @@ class _RegisterPageState extends State<RegisterPage> {
     return null;
   }
 
+  void _validatePasswordsLive() {
+    final pwd = _senhaController.text;
+    final confirm = _senhaConfirmController.text;
+    String? err;
+    if (confirm.isNotEmpty) {
+      if (pwd != confirm) {
+        err = 'Senhas não coincidem.';
+      } else if (pwd.length < 6) {
+        err = 'Senha deve ter mínimo 6 caracteres.';
+      }
+    }
+    if (err != _passwordError) {
+      setState(() => _passwordError = err);
+    }
+  }
+
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _loading = true);
     final email = _emailController.text.trim();
+    final username = _usuarioController.text.trim();
     final password = _senhaController.text;
-    final displayName = _nomeController.text.trim();
+    final confirm = _senhaConfirmController.text;
     bool success = false;
+    if (password.isNotEmpty || confirm.isNotEmpty) {
+      if (confirm.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Confirme a nova senha.')));
+        setState(() => _loading = false);
+        return;
+      }
+      if (password != confirm) {
+        setState(() => _passwordError = 'Senhas não coincidem.');
+        setState(() => _loading = false);
+        return;
+      }
+      if (password.length < 6) {
+        setState(() => _passwordError = 'Senha deve ter mínimo 6 caracteres.');
+        setState(() => _loading = false);
+        return;
+      }
+      setState(() => _passwordError = null);
+    }
     // Tenta Firebase primeiro se inicializado; se não, fallback local
     try {
       final firebaseReady = await FirebaseAuthService.ensureInitialized();
       if (firebaseReady) {
         final cred = await FirebaseAuthService().register(email, password);
-        if (displayName.isNotEmpty) {
-          await cred.user?.updateDisplayName(displayName);
+        if (username.isNotEmpty) {
+          await cred.user?.updateDisplayName(username);
         }
         success = true;
       } else {
-        final okLocal = await _auth.register(
-          email,
-          _usuarioController.text.trim(),
-          password,
-        );
+        final okLocal = await _auth.register(email, username, password);
         success = okLocal;
         if (!okLocal && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -331,13 +312,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 20),
-                  AppTextField(
-                    label: 'Nome Completo',
-                    icon: Icons.badge,
-                    controller: _nomeController,
-                    validator: (v) => _validateNotEmpty(v, 'o Nome Completo'),
-                  ),
-                  const SizedBox(height: 10),
+
                   AppTextField(
                     label: 'Nome de Usuário',
                     icon: Icons.person,
@@ -345,53 +320,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     validator: (v) => _validateNotEmpty(v, 'o Nome de Usuário'),
                   ),
                   const SizedBox(height: 10),
-                  DropdownButtonFormField<String>(
-                    initialValue: _sexoSelecionado,
-                    decoration: const InputDecoration(labelText: 'Sexo'),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'Feminino',
-                        child: Text('Feminino'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Masculino',
-                        child: Text('Masculino'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Não informar',
-                        child: Text('Não informar'),
-                      ),
-                    ],
-                    onChanged:
-                        (value) => setState(() => _sexoSelecionado = value),
-                    validator:
-                        (v) =>
-                            (v == null || v.isEmpty) ? 'Informe o Sexo' : null,
-                  ),
-                  const SizedBox(height: 10),
-                  TextFormField(
-                    controller: _dataNascimentoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Data de Nascimento',
-                      hintText: 'dd/mm/aaaa',
-                      counterText: '',
-                    ),
-                    keyboardType: TextInputType.datetime,
-                    maxLength: 10,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      DateInputFormatter(),
-                    ],
-                    validator: _validateDataNascimento,
-                  ),
-                  const SizedBox(height: 10),
-                  AppTextField(
-                    label: 'Endereço',
-                    icon: Icons.home,
-                    controller: _enderecoController,
-                    validator: _validateEndereco,
-                  ),
-                  const SizedBox(height: 10),
+
                   AppTextField(
                     label: 'Email',
                     icon: Icons.email,
@@ -400,26 +329,23 @@ class _RegisterPageState extends State<RegisterPage> {
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 10),
-                  AppTextField(
-                    label: 'Celular',
-                    icon: Icons.phone,
-                    controller: _celularController,
-                    keyboardType: TextInputType.phone,
-                    hintText: '(99) 99999-9999',
-                    maxLength: 15,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      PhoneInputFormatter(),
-                    ],
-                    validator: _validateCelular,
-                  ),
-                  const SizedBox(height: 10),
+
                   AppTextField(
                     label: 'Senha',
                     icon: Icons.lock,
                     controller: _senhaController,
                     obscureText: true,
                     validator: _validateSenha,
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _senhaConfirmController,
+                    decoration: InputDecoration(
+                      labelText: 'Confirmar Senha',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      errorText: _passwordError,
+                    ),
+                    obscureText: true,
                   ),
                   const SizedBox(height: 20),
                   Semantics(

@@ -4,7 +4,10 @@ import 'package:run/data/repositories/books_repository_impl.dart';
 import 'package:run/domain/repositories/books_repository.dart';
 import 'package:run/domain/usecases/search_books.dart';
 import 'package:run/domain/usecases/get_work_details.dart';
+import 'package:run/domain/usecases/fetch_subject_books.dart';
 import 'package:run/models/book_model.dart';
+import 'package:run/models/listing_model.dart';
+import 'package:run/services/listing_service.dart';
 import 'cart.dart';
 
 // Infra
@@ -14,6 +17,11 @@ final booksRepositoryProvider = Provider<BooksRepository>((ref) {
   return BooksRepositoryImpl(svc);
 });
 
+// Listings
+final listingServiceProvider = Provider<ListingService>(
+  (ref) => ListingService(),
+);
+
 // Use cases
 final searchBooksUseCaseProvider = Provider<SearchBooks>((ref) {
   final repo = ref.read(booksRepositoryProvider);
@@ -22,6 +30,10 @@ final searchBooksUseCaseProvider = Provider<SearchBooks>((ref) {
 final getWorkDetailsUseCaseProvider = Provider<GetWorkDetails>((ref) {
   final repo = ref.read(booksRepositoryProvider);
   return GetWorkDetails(repo);
+});
+final fetchSubjectBooksUseCaseProvider = Provider<FetchSubjectBooks>((ref) {
+  final repo = ref.read(booksRepositoryProvider);
+  return FetchSubjectBooks(repo);
 });
 
 // Search state
@@ -158,5 +170,170 @@ final workDetailsProvider = FutureProvider.family
       return usecase(workKey);
     });
 
+// Subjects providers (basic cache per subject). Could be replaced by a StateNotifier if pagination needed.
+final subjectBooksProvider = FutureProvider.family<List<BookModel>, String>((
+  ref,
+  subject,
+) async {
+  final usecase = ref.read(fetchSubjectBooksUseCaseProvider);
+  return usecase(subject, limit: 12);
+});
+
+// Stream providers mapping Firestore listings to BookModel for UI reuse
+final saleListingsProvider = StreamProvider<List<BookModel>>((ref) {
+  final svc = ref.read(listingServiceProvider);
+  return svc
+      .watchByType(ListingType.sale)
+      .map(
+        (list) =>
+            list
+                .map(
+                  (l) => BookModel.network(
+                    title: l.title,
+                    imageUrl: l.imageUrl ?? '',
+                    synopsis: l.synopsis,
+                    authors: l.authors,
+                    price: l.price,
+                    listingId: l.id,
+                    listingType: l.type.name,
+                    exchangeWanted: l.exchangeWanted,
+                    userId: l.userId,
+                    userDisplayName: l.userDisplayName ?? l.userId,
+                    createdAt: l.createdAt,
+                  ),
+                )
+                .toList(),
+      );
+});
+
+final swapListingsProvider = StreamProvider<List<BookModel>>((ref) {
+  final svc = ref.read(listingServiceProvider);
+  return svc
+      .watchByType(ListingType.swap)
+      .map(
+        (list) =>
+            list
+                .map(
+                  (l) => BookModel.network(
+                    title: l.title,
+                    imageUrl: l.imageUrl ?? '',
+                    synopsis: l.synopsis,
+                    authors: l.authors,
+                    listingId: l.id,
+                    listingType: l.type.name,
+                    exchangeWanted: l.exchangeWanted,
+                    userId: l.userId,
+                    userDisplayName: l.userDisplayName ?? l.userId,
+                    createdAt: l.createdAt,
+                  ),
+                )
+                .toList(),
+      );
+});
+
+final donationListingsProvider = StreamProvider<List<BookModel>>((ref) {
+  final svc = ref.read(listingServiceProvider);
+  return svc
+      .watchByType(ListingType.donation)
+      .map(
+        (list) =>
+            list
+                .map(
+                  (l) => BookModel.network(
+                    title: l.title,
+                    imageUrl: l.imageUrl ?? '',
+                    synopsis: l.synopsis,
+                    authors: l.authors,
+                    listingId: l.id,
+                    listingType: l.type.name,
+                    exchangeWanted: l.exchangeWanted,
+                    userId: l.userId,
+                    userDisplayName: l.userDisplayName ?? l.userId,
+                    createdAt: l.createdAt,
+                  ),
+                )
+                .toList(),
+      );
+});
+
 // Cart (re-export for central access)
 final cartStateProvider = cartProvider;
+
+// Local filtering & ordering for listings
+enum SaleOrder { recent, priceAsc, priceDesc }
+
+final listingsFilterQueryProvider = StateProvider<String>((ref) => '');
+final saleOrderProvider = StateProvider<SaleOrder>((ref) => SaleOrder.recent);
+
+final filteredOrderedSaleListingsProvider = Provider<List<BookModel>>((ref) {
+  final base = ref
+      .watch(saleListingsProvider)
+      .maybeWhen(data: (list) => list, orElse: () => <BookModel>[]);
+  final query = ref.watch(listingsFilterQueryProvider).trim().toLowerCase();
+  final order = ref.watch(saleOrderProvider);
+  var working = base;
+  if (query.isNotEmpty) {
+    working =
+        working
+            .where(
+              (b) =>
+                  b.title.toLowerCase().contains(query) ||
+                  b.authors.any((a) => a.toLowerCase().contains(query)),
+            )
+            .toList();
+  }
+  switch (order) {
+    case SaleOrder.recent:
+      // Sort by most recent (nulls last)
+      working.sort((a, b) {
+        final ad = a.createdAt;
+        final bd = b.createdAt;
+        if (ad == null && bd == null) return 0;
+        if (ad == null) return 1; // a after
+        if (bd == null) return -1; // b after
+        return bd.compareTo(ad); // descending
+      });
+      break;
+    case SaleOrder.priceAsc:
+      working.sort(
+        (a, b) =>
+            (a.price ?? double.infinity).compareTo(b.price ?? double.infinity),
+      );
+      break;
+    case SaleOrder.priceDesc:
+      working.sort((a, b) => (b.price ?? -1).compareTo(a.price ?? -1));
+      break;
+  }
+  return working;
+});
+
+final filteredSwapListingsProvider = Provider<List<BookModel>>((ref) {
+  final base = ref
+      .watch(swapListingsProvider)
+      .maybeWhen(data: (list) => list, orElse: () => <BookModel>[]);
+  final query = ref.watch(listingsFilterQueryProvider).trim().toLowerCase();
+  if (query.isEmpty) return base;
+  return base
+      .where(
+        (b) =>
+            b.title.toLowerCase().contains(query) ||
+            b.authors.any((a) => a.toLowerCase().contains(query)) ||
+            (b.exchangeWanted?.toLowerCase().contains(query) ?? false),
+      )
+      .toList();
+});
+
+final filteredDonationListingsProvider = Provider<List<BookModel>>((ref) {
+  final base = ref
+      .watch(donationListingsProvider)
+      .maybeWhen(data: (list) => list, orElse: () => <BookModel>[]);
+  final query = ref.watch(listingsFilterQueryProvider).trim().toLowerCase();
+  if (query.isEmpty) return base;
+  return base
+      .where(
+        (b) =>
+            b.title.toLowerCase().contains(query) ||
+            b.authors.any((a) => a.toLowerCase().contains(query)),
+      )
+      .toList();
+});

@@ -31,4 +31,29 @@ class BooksRepositoryImpl implements BooksRepository {
   Future<WorkDetails> fetchWorkDetails(String workKey) {
     return _service.fetchWorkDetails(workKey);
   }
+
+  @override
+  Future<List<BookModel>> fetchBySubject(
+    String subject, {
+    int limit = 12,
+    int offset = 0,
+  }) async {
+    final remotes = await _service.fetchBySubject(
+      subject,
+      limit: limit,
+      offset: offset,
+    );
+    return remotes
+        .map(
+          (r) => BookModel.network(
+            title: r.title,
+            imageUrl: r.imageUrl,
+            synopsis: r.synopsis,
+            authors: r.authors,
+            workKey: r.workKey,
+            year: r.firstPublishYear,
+          ),
+        )
+        .toList();
+  }
 }

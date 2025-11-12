@@ -1,12 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:run/firebase_options.dart';
 
 /// Wrapper simples que só acessa FirebaseAuth após inicialização bem-sucedida.
 class FirebaseAuthService {
   static Future<bool> ensureInitialized() async {
     try {
       if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp();
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
       }
       return Firebase.apps.isNotEmpty;
     } catch (_) {

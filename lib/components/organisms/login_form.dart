@@ -3,7 +3,7 @@ import '../../components/molecules/app_text_field.dart';
 import '../../components/atoms/app_button.dart';
 
 class LoginForm extends StatefulWidget {
-  final Future<bool> Function(String userOrEmail, String password) onSubmit;
+  final Future<bool> Function(String email, String password) onSubmit;
   final VoidCallback onForgot;
   final VoidCallback onRegister;
 
@@ -24,12 +24,10 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordController = TextEditingController();
   bool _loading = false;
 
-  String? _validateEmailOrUser(String? value) {
-    if (value == null || value.isEmpty) return 'Informe o e-mail ou usuário';
-    if (value.contains('@')) {
-      final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-      if (!emailRegex.hasMatch(value)) return 'E-mail inválido';
-    }
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Informe o e-mail';
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    if (!emailRegex.hasMatch(value)) return 'E-mail inválido';
     return null;
   }
 
@@ -62,11 +60,11 @@ class _LoginFormState extends State<LoginForm> {
         mainAxisSize: MainAxisSize.min,
         children: [
           AppTextField(
-            label: 'Email ou Usuário',
-            icon: Icons.person,
+            label: 'Email',
+            icon: Icons.email,
             controller: _emailController,
-            validator: _validateEmailOrUser,
-            semanticLabel: 'Campo de email ou usuário',
+            validator: _validateEmail,
+            semanticLabel: 'Campo de email',
           ),
           const SizedBox(height: 12),
           AppTextField(
