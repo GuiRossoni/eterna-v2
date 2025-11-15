@@ -92,6 +92,7 @@ class _RegisterFormState extends State<RegisterForm> {
     final password = _senhaController.text;
     final confirm = _senhaConfirmController.text;
     bool success = false;
+    Object? firebaseError;
     if (password.isNotEmpty || confirm.isNotEmpty) {
       if (confirm.isEmpty) {
         ScaffoldMessenger.of(
@@ -120,20 +121,22 @@ class _RegisterFormState extends State<RegisterForm> {
           await cred.user?.updateDisplayName(username);
         }
         success = true;
-      } else {
-        final okLocal = await _auth.register(email, username, password);
-        success = okLocal;
-        if (!okLocal && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('E-mail ou usuário já existe.')),
-          );
-        }
       }
     } catch (e) {
-      if (mounted) {
+      firebaseError = e;
+    }
+
+    if (!success) {
+      final okLocal = await _auth.register(email, username, password);
+      success = okLocal;
+      if (!okLocal && mounted) {
+        final fallbackMessage =
+            firebaseError != null
+                ? 'Falha no cadastro remoto: $firebaseError'
+                : 'E-mail ou usuário já existe.';
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Falha no cadastro: $e')));
+        ).showSnackBar(SnackBar(content: Text(fallbackMessage)));
       }
     }
     setState(() => _loading = false);

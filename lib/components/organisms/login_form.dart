@@ -97,6 +97,7 @@ class _LoginFormState extends State<LoginForm> {
             children: [
               Expanded(
                 child: AppButton(
+                  buttonKey: const ValueKey<String>('login-submit-button'),
                   label: _loading ? 'Entrando...' : 'Entrar',
                   icon: Icons.login,
                   onTap: _loading ? () {} : _submit,
@@ -105,6 +106,7 @@ class _LoginFormState extends State<LoginForm> {
               const SizedBox(width: 10),
               Expanded(
                 child: AppButton(
+                  buttonKey: const ValueKey<String>('login-register-button'),
                   label: 'Cadastrar',
                   icon: Icons.app_registration,
                   color: Theme.of(context).colorScheme.secondary,

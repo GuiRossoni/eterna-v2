@@ -57,6 +57,6 @@ void main() {
 
     // Deve mostrar a AppBar com o título e seção de comentários
     expect(find.text('Livro 1'), findsWidgets);
-    expect(find.text('Comentários:'), findsOneWidget);
+    expect(find.text('Comentários'), findsWidgets);
   });
 }

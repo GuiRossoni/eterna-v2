@@ -6,6 +6,7 @@ class AppButton extends StatelessWidget {
   final IconData? icon;
   final Color? color;
   final String? semanticLabel;
+  final Key? buttonKey;
 
   const AppButton({
     super.key,
@@ -14,6 +15,7 @@ class AppButton extends StatelessWidget {
     this.icon,
     this.color,
     this.semanticLabel,
+    this.buttonKey,
   });
 
   @override
@@ -34,17 +36,25 @@ class AppButton extends StatelessWidget {
       button: true,
       label: semanticLabel ?? label,
       child: ElevatedButton(
+        key: buttonKey,
         style: style,
         onPressed: onTap,
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
               Icon(icon, color: Colors.white),
               const SizedBox(width: 8),
             ],
-            Text(label),
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
       ),

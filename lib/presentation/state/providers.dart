@@ -198,7 +198,6 @@ final workRatingProvider = Provider.autoDispose
       );
     });
 
-// Subjects providers (basic cache per subject). Could be replaced by a StateNotifier if pagination needed.
 final subjectBooksProvider = FutureProvider.family<List<BookModel>, String>((
   ref,
   subject,
