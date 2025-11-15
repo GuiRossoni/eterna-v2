@@ -230,7 +230,8 @@ class _AddListingPageState extends ConsumerState<AddListingPage> {
                   const SizedBox(height: 12),
                   if (_selected != null)
                     Card(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      color:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                       child: ListTile(
                         title: Text(_selected!.title),
                         subtitle: Text(
@@ -288,27 +289,28 @@ class _AddListingPageState extends ConsumerState<AddListingPage> {
                     ),
                   ],
                   const SizedBox(height: 24),
-                  DropdownButtonFormField<ListingType>(
-                    initialValue: _type,
-                    decoration: const InputDecoration(
-                      labelText: 'Tipo de Anúncio',
-                      prefixIcon: Icon(Icons.category_outlined),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
+                  DropdownMenu<ListingType>(
+                    initialSelection: _type,
+                    label: const Text('Tipo de Anúncio'),
+                    leadingIcon: const Icon(Icons.category_outlined),
+                    dropdownMenuEntries: const [
+                      DropdownMenuEntry(
                         value: ListingType.sale,
-                        child: Text('Venda'),
+                        label: 'Venda',
                       ),
-                      DropdownMenuItem(
+                      DropdownMenuEntry(
                         value: ListingType.swap,
-                        child: Text('Troca'),
+                        label: 'Troca',
                       ),
-                      DropdownMenuItem(
+                      DropdownMenuEntry(
                         value: ListingType.donation,
-                        child: Text('Doação'),
+                        label: 'Doação',
                       ),
                     ],
-                    onChanged: (v) => setState(() => _type = v ?? _type),
+                    onSelected: (v) {
+                      if (v == null) return;
+                      setState(() => _type = v);
+                    },
                   ),
                   const SizedBox(height: 12),
                   if (_type == ListingType.sale)
@@ -321,11 +323,13 @@ class _AddListingPageState extends ConsumerState<AddListingPage> {
                       ),
                       validator: (v) {
                         if (_type != ListingType.sale) return null;
-                        if (v == null || v.trim().isEmpty)
+                        if (v == null || v.trim().isEmpty) {
                           return 'Informe o preço';
+                        }
                         final value = double.tryParse(v.replaceAll(',', '.'));
-                        if (value == null || value <= 0)
+                        if (value == null || value <= 0) {
                           return 'Preço inválido';
+                        }
                         return null;
                       },
                     ),
@@ -373,7 +377,7 @@ class _AddListingPageState extends ConsumerState<AddListingPage> {
                           ),
                         ],
                         const SizedBox(height: 8),
-                        if (_swapSelected != null)
+                        if (_swapSelected != null) ...[
                           Card(
                             color:
                                 Theme.of(
@@ -399,8 +403,8 @@ class _AddListingPageState extends ConsumerState<AddListingPage> {
                                     () => setState(() => _swapSelected = null),
                               ),
                             ),
-                          )
-                        else if (_swapResults.isNotEmpty) ...[
+                          ),
+                        ] else if (_swapResults.isNotEmpty) ...[
                           SizedBox(
                             height: 220,
                             child: ListView.separated(
@@ -460,13 +464,14 @@ class _AddListingPageState extends ConsumerState<AddListingPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  if (_selected == null)
+                  if (_selected == null) ...[
                     Text(
                       'Selecione um livro para continuar.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
+                  ],
                 ],
               ),
             ),

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/review_model.dart';
 
 class RemoteBook {
   final String title;
@@ -176,6 +177,81 @@ class BookService {
         workKey: workKey,
         authors: authors,
         firstPublishYear: firstPublishYear,
+      );
+    }).toList();
+  }
+
+  Future<RatingSummary?> fetchWorkRating(String workKey) async {
+    if (workKey.isEmpty) return null;
+    final key = workKey.startsWith('/') ? workKey : '/$workKey';
+    final uri = Uri.parse('$_base$key/ratings.json');
+    final resp = await http.get(uri);
+    if (resp.statusCode == 404) return null;
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao carregar avaliações: ${resp.statusCode}');
+    }
+    final data = json.decode(resp.body) as Map<String, dynamic>;
+    final summary = data['summary'];
+    if (summary is! Map<String, dynamic>) return null;
+    final average = (summary['average'] as num?)?.toDouble();
+    final count = (summary['count'] as num?)?.toInt() ?? 0;
+    final Map<int, int> distribution = {};
+    final ratingsMap = summary['ratings'] ?? data['counts'];
+    if (ratingsMap is Map) {
+      ratingsMap.forEach((key, value) {
+        final k = int.tryParse(key.toString());
+        final v = (value is num) ? value.toInt() : int.tryParse('$value');
+        if (k != null && v != null) {
+          distribution[k] = v;
+        }
+      });
+    }
+    if (average == null && count == 0) return null;
+    return RatingSummary(
+      average: average,
+      count: count,
+      distribution: Map.unmodifiable(distribution),
+    );
+  }
+
+  Future<List<WorkReview>> fetchWorkReviews(
+    String workKey, {
+    int limit = 10,
+  }) async {
+    if (workKey.isEmpty) return const [];
+    final key = workKey.startsWith('/') ? workKey : '/$workKey';
+    final uri = Uri.parse('$_base$key/reviews.json');
+    final resp = await http.get(uri);
+    if (resp.statusCode == 404) return const [];
+    if (resp.statusCode != 200) {
+      throw Exception('Erro ao carregar comentários: ${resp.statusCode}');
+    }
+    final data = json.decode(resp.body) as Map<String, dynamic>;
+    final entries =
+        (data['entries'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+    return entries.take(limit).map((entry) {
+      final author = entry['author'];
+      String user = 'Leitor anônimo';
+      if (author is Map && author['display_name'] is String) {
+        user = author['display_name'] as String;
+      }
+      final rawText = (entry['body'] ?? '').toString();
+      final sanitized = rawText
+          .replaceAll(RegExp(r'<[^>]*>'), '')
+          .replaceAll('&nbsp;', ' ');
+      final text = sanitized.trim();
+      final rating =
+          entry['rating'] is num ? (entry['rating'] as num).toInt() : null;
+      DateTime? createdAt;
+      final created = entry['created'];
+      if (created is String) {
+        createdAt = DateTime.tryParse(created);
+      }
+      return WorkReview(
+        user: user,
+        text: text.isEmpty ? 'Sem comentário.' : text,
+        rating: rating,
+        createdAt: createdAt,
       );
     }).toList();
   }

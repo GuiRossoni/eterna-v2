@@ -21,12 +21,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   String? _validateInput(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Informe o e-mail ou número de celular';
+      return 'Informe o e-mail';
     }
     final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    final celularRegex = RegExp(r'^(\(?\d{2}\)?\s)?(\d{4,5}\-?\d{4})$');
-    if (!emailRegex.hasMatch(value) && !celularRegex.hasMatch(value)) {
-      return 'Digite um e-mail ou celular válido';
+    if (!emailRegex.hasMatch(value)) {
+      return 'Digite um e-mail válido';
     }
     return null;
   }
@@ -68,7 +67,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 TextFormField(
                   controller: _controller,
                   decoration: const InputDecoration(
-                    labelText: "Email ou Número de Celular",
+                    labelText: "E-mail cadastrado",
                   ),
                   validator: _validateInput,
                 ),
@@ -79,55 +78,46 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       if (!(_formKey.currentState?.validate() ?? false)) return;
+                      final messenger = ScaffoldMessenger.of(context);
+                      final dialogContext = context;
                       final value = _controller.text.trim();
-                      if (value.contains('@')) {
-                        try {
-                          final ok =
-                              await FirebaseAuthService.ensureInitialized();
-                          if (!ok) {
-                            if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Firebase não está configurado para web/este ambiente.',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-                          await FirebaseAuthService().sendPasswordReset(value);
-                          if (!mounted) return;
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => AlertDialog(
-                                  content: Text(
-                                    'E-mail de recuperação enviado para $value',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                          );
-                        } catch (e) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Falha ao enviar recuperação: $e'),
-                            ),
-                          );
-                        }
-                      } else {
-                        // Placeholder: SMS não implementado
+                      try {
+                        final ok =
+                            await FirebaseAuthService.ensureInitialized();
                         if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Recuperação por SMS não está configurada.',
+                        if (!ok) {
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Firebase não está configurado para web/este ambiente.',
+                              ),
                             ),
+                          );
+                          return;
+                        }
+                        await FirebaseAuthService().sendPasswordReset(value);
+                        if (!mounted) return;
+                        if (!dialogContext.mounted) return;
+                        await showDialog<void>(
+                          context: dialogContext,
+                          builder:
+                              (dialogCtx) => AlertDialog(
+                                content: Text(
+                                  'E-mail de recuperação enviado para $value',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dialogCtx),
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              ),
+                        );
+                      } catch (e) {
+                        if (!mounted) return;
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Falha ao enviar recuperação: $e'),
                           ),
                         );
                       }

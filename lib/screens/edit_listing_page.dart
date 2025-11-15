@@ -151,27 +151,28 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<ListingType>(
-                    value: _type,
-                    decoration: const InputDecoration(
-                      labelText: 'Tipo de Anúncio',
-                      prefixIcon: Icon(Icons.category_outlined),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
+                  DropdownMenu<ListingType>(
+                    initialSelection: _type,
+                    label: const Text('Tipo de Anúncio'),
+                    leadingIcon: const Icon(Icons.category_outlined),
+                    dropdownMenuEntries: const [
+                      DropdownMenuEntry(
                         value: ListingType.sale,
-                        child: Text('Venda'),
+                        label: 'Venda',
                       ),
-                      DropdownMenuItem(
+                      DropdownMenuEntry(
                         value: ListingType.swap,
-                        child: Text('Troca'),
+                        label: 'Troca',
                       ),
-                      DropdownMenuItem(
+                      DropdownMenuEntry(
                         value: ListingType.donation,
-                        child: Text('Doação'),
+                        label: 'Doação',
                       ),
                     ],
-                    onChanged: (v) => setState(() => _type = v ?? _type),
+                    onSelected: (v) {
+                      if (v == null) return;
+                      setState(() => _type = v);
+                    },
                   ),
                   const SizedBox(height: 12),
                   if (_type == ListingType.sale)

@@ -67,32 +67,32 @@ class _LoginPageState extends State<LoginPage> {
               LoginForm(
                 onSubmit: (email, pass) async {
                   // Tenta Firebase com e-mail primeiro
+                  final navigator = Navigator.of(context);
                   try {
                     final firebaseReady =
                         await FirebaseAuthService.ensureInitialized();
+                    if (!mounted) return false;
                     if (firebaseReady) {
                       final cred = await FirebaseAuthService().signIn(
                         email,
                         pass,
                       );
+                      if (!mounted) return false;
                       if (cred.user != null) {
-                        if (mounted) {
-                          Navigator.pushReplacementNamed(context, '/home');
-                        }
+                        navigator.pushReplacementNamed('/home');
                         return true;
                       }
                     }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Erro de login Firebase: $e')),
-                      );
-                    }
+                  } catch (_) {
+                    // Erro do Firebase é ignorado para não duplicar mensagens.
+                    // O fallback local abaixo continuará tratando o caso de usuário inexistente.
                   }
+
                   // Fallback local
                   final ok = await _auth.login(email, pass);
-                  if (ok && mounted) {
-                    Navigator.pushReplacementNamed(context, '/home');
+                  if (!mounted) return ok;
+                  if (ok) {
+                    navigator.pushReplacementNamed('/home');
                   }
                   return ok;
                 },

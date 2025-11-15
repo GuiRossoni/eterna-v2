@@ -7,7 +7,9 @@ import 'package:run/domain/usecases/get_work_details.dart';
 import 'package:run/domain/usecases/fetch_subject_books.dart';
 import 'package:run/models/book_model.dart';
 import 'package:run/models/listing_model.dart';
+import 'package:run/models/review_model.dart';
 import 'package:run/services/listing_service.dart';
+import 'package:run/services/review_service.dart';
 import 'cart.dart';
 
 // Infra
@@ -21,6 +23,7 @@ final booksRepositoryProvider = Provider<BooksRepository>((ref) {
 final listingServiceProvider = Provider<ListingService>(
   (ref) => ListingService(),
 );
+final reviewServiceProvider = Provider<ReviewService>((ref) => ReviewService());
 
 // Use cases
 final searchBooksUseCaseProvider = Provider<SearchBooks>((ref) {
@@ -168,6 +171,31 @@ final workDetailsProvider = FutureProvider.family
       if (workKey.isEmpty) return null;
       final usecase = ref.read(getWorkDetailsUseCaseProvider);
       return usecase(workKey);
+    });
+
+final workReviewsProvider = StreamProvider.family
+    .autoDispose<List<WorkReview>, String>((ref, workKey) {
+      if (workKey.isEmpty) {
+        return const Stream<List<WorkReview>>.empty();
+      }
+      final svc = ref.read(reviewServiceProvider);
+      return svc.watchReviews(workKey);
+    });
+
+final workRatingProvider = Provider.autoDispose
+    .family<AsyncValue<RatingSummary?>, String>((ref, workKey) {
+      final reviewsAsync = ref.watch(workReviewsProvider(workKey));
+      return reviewsAsync.when(
+        data: (reviews) {
+          final summary = RatingSummary.fromReviews(reviews);
+          if (summary.count == 0 || summary.average == null) {
+            return const AsyncValue<RatingSummary?>.data(null);
+          }
+          return AsyncValue<RatingSummary?>.data(summary);
+        },
+        loading: () => const AsyncValue<RatingSummary?>.loading(),
+        error: (err, stack) => AsyncValue<RatingSummary?>.error(err, stack),
+      );
     });
 
 // Subjects providers (basic cache per subject). Could be replaced by a StateNotifier if pagination needed.

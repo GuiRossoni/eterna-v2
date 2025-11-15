@@ -11,6 +11,25 @@ class BookDetailsPage extends StatefulWidget {
 class _BookDetailsPageState extends State<BookDetailsPage> {
   final ScrollController _scrollController = ScrollController();
 
+  String _resolveReviewKey(
+    Map<String, dynamic>? args,
+    String title,
+    String? workKey,
+  ) {
+    final explicit = (args?['reviewKey'] as String?)?.trim();
+    if (explicit != null && explicit.isNotEmpty) return explicit;
+    if (workKey != null && workKey.isNotEmpty) return workKey;
+    final listingId = (args?['listingId'] as String?)?.trim();
+    if (listingId != null && listingId.isNotEmpty) {
+      return 'listing:$listingId';
+    }
+    final normalized = title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]+'),
+      '-',
+    );
+    return 'title:$normalized';
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -27,6 +46,14 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
     final imageAsset = args?['imageAsset'] as String?;
     final imageUrl = args?['imageUrl'] as String?;
     final workKey = args?['workKey'] as String?;
+    final listingId = args?['listingId'] as String?;
+    final listingType = args?['listingType'] as String?;
+    final exchangeWanted = args?['exchangeWanted'] as String?;
+    final double? price =
+        args?['price'] is num ? (args?['price'] as num).toDouble() : null;
+    final ownerName = args?['ownerName'] as String?;
+    final ownerId = args?['userId'] as String?;
+    final reviewKey = _resolveReviewKey(args, title, workKey);
     final authors =
         (args?['authors'] as List?)?.cast<String>() ?? const <String>[];
     final int? year = args?['year'] as int?;
@@ -48,8 +75,15 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
             title: title,
             synopsis: synopsis,
             workKey: workKey,
+            reviewKey: reviewKey,
             authors: authors,
             year: year,
+            listingType: listingType,
+            listingId: listingId,
+            exchangeWanted: exchangeWanted,
+            price: price,
+            ownerName: ownerName,
+            ownerId: ownerId,
           ),
         ),
       ),

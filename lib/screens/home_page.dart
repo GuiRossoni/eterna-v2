@@ -31,12 +31,37 @@ class _HomePageState extends ConsumerState<HomePage> {
         'sinopse': book.synopsis,
         'heroTag': heroTag,
         if (book.workKey != null) 'workKey': book.workKey,
+        if (book.listingId != null) 'listingId': book.listingId,
+        if (book.listingType != null) 'listingType': book.listingType,
+        if ((book.exchangeWanted ?? '').isNotEmpty)
+          'exchangeWanted': book.exchangeWanted,
+        if (book.price != null) 'price': book.price,
+        if ((book.userId ?? '').isNotEmpty) 'userId': book.userId,
+        if ((book.userDisplayName ?? '').isNotEmpty)
+          'ownerName': book.userDisplayName,
+        'reviewKey': _reviewKeyFor(book),
         if (book.authors.isNotEmpty) 'authors': book.authors,
         if (book.year != null) 'year': book.year,
         if (book.imageAsset != null) 'imageAsset': book.imageAsset,
         if (book.imageUrl != null) 'imageUrl': book.imageUrl,
       },
     );
+  }
+
+  String _reviewKeyFor(BookModel book) {
+    final workKey = book.workKey;
+    if (workKey != null && workKey.isNotEmpty) {
+      return workKey;
+    }
+    final listingId = book.listingId;
+    if (listingId != null && listingId.isNotEmpty) {
+      return 'listing:$listingId';
+    }
+    final normalized = book.title.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]+'),
+      '-',
+    );
+    return 'title:$normalized';
   }
 
   // Busca movida para SearchController (Riverpod)
@@ -413,10 +438,14 @@ class _ListingSection extends ConsumerWidget {
             BookSection(
               title: title,
               books: visibleBooks,
+              currentUserId: authUid,
               onSelect: (b, hero) => onSelect(b, hero),
               onAddToCart:
                   isSale
                       ? (b) {
+                        if (b.userId == authUid) {
+                          return; // próprio anúncio → nada
+                        }
                         ref.read(cartStateProvider.notifier).add(b);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

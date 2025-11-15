@@ -10,6 +10,7 @@ class BookSection extends StatefulWidget {
   final void Function(BookModel)? onAddToCart;
   final void Function(BookModel)? onEditListing;
   final void Function(BookModel)? onDeleteListing;
+  final String? currentUserId;
 
   const BookSection({
     super.key,
@@ -20,6 +21,7 @@ class BookSection extends StatefulWidget {
     this.onAddToCart,
     this.onEditListing,
     this.onDeleteListing,
+    this.currentUserId,
   });
 
   @override
@@ -97,6 +99,11 @@ class _BookSectionState extends State<BookSection> {
                   final heroTag = '${widget.title}-${book.title}-$index';
                   final primary = _buildPrimaryLabel(book);
                   final meta = _buildMeta(book);
+                  final canAddToCart =
+                      widget.onAddToCart != null &&
+                      (widget.currentUserId == null ||
+                          book.userId == null ||
+                          book.userId != widget.currentUserId);
                   return SizedBox(
                     width: 160,
                     child: Column(
@@ -124,9 +131,7 @@ class _BookSectionState extends State<BookSection> {
                                 style: const TextStyle(fontSize: 11),
                               ),
                             ),
-                            if (widget.onAddToCart != null &&
-                                book.listingType == 'sale' &&
-                                book.price != null)
+                            if (canAddToCart)
                               IconButton(
                                 icon: const Icon(
                                   Icons.add_shopping_cart,

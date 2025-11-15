@@ -36,22 +36,59 @@ Observação: Páginas de demonstração antigas foram removidas da navegação 
 
 ## Arquitetura e Organização
 
-O projeto adota Atomic Design para UI e foi iniciado o refino para princípios da Clean Architecture (UI/Presentation, Domain, Data) com Riverpod para gerenciamento de estado.
+### Visão conceitual
 
-Camadas e principais arquivos:
+O app combina **Atomic Design** para a camada visual com uma abordagem **MVVM + Clean Architecture** no restante da stack. Em alto nível:
 
-- Presentation/UI
-	- `lib/screens/*` (páginas)
-	- `lib/components/*` (Atomic Design)
-	- Estado/DI: `lib/presentation/state/providers.dart` (providers, `SearchController` e `SearchState`)
-- Domain
-	- Repositório: `lib/domain/repositories/books_repository.dart`
-	- Casos de uso: `lib/domain/usecases/search_books.dart`, `lib/domain/usecases/get_work_details.dart`
-- Data
-	- Implementação: `lib/data/repositories/books_repository_impl.dart`
-	- Cliente HTTP: `lib/services/book_service.dart`
+- **Presentation (View + ViewModel)**
+  - As *Views* são widgets declarativos nas pastas `lib/screens` e `lib/components`. Elas não contêm regra de negócio, apenas composição de UI.
+  - Os *ViewModels* são providos por Riverpod (`lib/presentation/state/providers.dart`), expondo estados (`AsyncValue`, `StateNotifier`) para as telas. Isso garante testabilidade (basta mockar providers) e substituição simples de dependências.
+- **Domain**
+  - Define modelos imutáveis e contratos (`lib/models`, `lib/domain/repositories/*`).
+  - Casos de uso (`lib/domain/usecases/*`) encapsulam regras como buscar livros ou obter detalhes. Como são funções puras/reporters, são fáceis de cobrir com testes unitários.
+- **Data**
+  - Implementa os contratos através de serviços (`lib/services/book_service.dart`, `lib/services/listing_service.dart`) e repositórios (`lib/data/repositories/*`).
+  - Qualquer mudança de backend (ex.: trocar Open Library por outro provedor) fica isolada aqui.
 
-O app inicializa com `ProviderScope` em `lib/main.dart` e as telas consomem providers conforme necessário.
+Essa separação faz com que cada módulo tenha dependências unidirecionais (Presentation → Domain → Data). O resultado é uma base modular, onde componentes da UI podem ser reutilizados, estados podem ser testados isoladamente e serviços podem evoluir sem quebrar a camada visual.
+
+### Estrutura de pastas
+
+```
+lib/
+├── components/
+│   ├── atoms/
+│   ├── molecules/
+│   └── organisms/
+├── data/
+│   └── repositories/
+├── domain/
+│   ├── repositories/
+│   └── usecases/
+├── models/
+├── presentation/
+│   └── state/
+├── screens/
+├── services/
+└── widgets/
+```
+
+- **components/**: implementação do Atomic Design, garantindo reutilização e consistência visual.
+- **screens/**: páginas que orquestram componentes e assinam providers.
+- **presentation/state/**: *ViewModels* (Riverpod providers, `SearchController`, filtros de listagem, carrinho etc.).
+- **domain/**: contratos e casos de uso (ex.: `search_books.dart`, `get_work_details.dart`).
+- **data/**: repositórios concretos ligados a APIs ou Firebase.
+- **services/**: integrações externas (Open Library, Firestore, Firebase Auth).
+- **models/**: entidades puras usadas em todas as camadas.
+- **widgets/**: utilitários de UI genéricos (tema, `GlassPanel`).
+
+### Contribuições para modularidade, testabilidade e manutenção
+
+- **Modularidade**: a pasta `components` permite evoluir a UI sem tocar em lógica; mudanças de dados ficam nos serviços/repositórios sem impactar as telas.
+- **Testabilidade**: `StateNotifier`/`FutureProvider` expõem estados previsíveis. Casos de uso no domínio não dependem de Flutter, facilitando testes unitários. Serviços podem ser mockados via providers.
+- **Manutenção**: camadas bem definidas tornam refactors localizados. Ex.: adicionar novo tipo de anúncio tocou apenas em `listing_service.dart`, `providers.dart` e componentes específicos.
+
+O app inicia com `ProviderScope` (`lib/main.dart`), garantindo que qualquer tela use as mesmas instâncias de estado/injeção com escopo controlado.
 
 ## Onde encontrar (arquivos principais)
 
