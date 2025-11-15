@@ -127,13 +127,7 @@ O projeto agora tenta usar Firebase Authentication (registro / login / reset) an
 `FirebaseAuthService` só acessa `FirebaseAuth.instance` após verificar se `Firebase.initializeApp()` foi bem-sucedido, evitando erros em builds Web sem configuração (`TypeError: ... JavaScriptObject`). Se Firebase não estiver pronto, os métodos retornam `null` silenciosamente e o fallback local é usado.
 
 ### Recuperação de senha
-`ForgotPasswordPage` envia e-mail de reset via Firebase quando configurado; SMS é placeholder (necessita Phone Auth configurado e verificação). 
-
-### Próximos passos sugeridos
-- Implementar Phone Auth (verificação SMS) se necessário.
-- Adicionar testes widget cobrindo fluxo de reset de senha.
-- Centralizar mensagens de erro/sucesso em um serviço de UI para internacionalização futura.
-- Persistir carrinho entre sessões (ex.: `shared_preferences` ou Firestore).
+`ForgotPasswordPage` envia e-mail de reset via Firebase quando configurado. 
 
 # 📚 Eterna Livraria
 
