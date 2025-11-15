@@ -38,10 +38,7 @@ class _LoginPageState extends State<LoginPage> {
                     return true;
                   }
                 }
-              } catch (_) {
-                // Erro do Firebase é ignorado para não duplicar mensagens.
-                // O fallback local abaixo continuará tratando o caso de usuário inexistente.
-              }
+              } catch (_) {}
 
               final ok = await _auth.login(email, pass);
               if (!mounted) return ok;
