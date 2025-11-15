@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../molecules/comment_item.dart';
@@ -75,6 +76,25 @@ class _BookDetailsContentState extends ConsumerState<BookDetailsContent> {
       }
       return Icon(icon, color: Colors.amber, size: 20);
     });
+  }
+
+  Widget _buildNoRatingsMessage(BuildContext context) => Text(
+    'Ainda não há avaliações registradas para este livro.',
+    style: Theme.of(context).textTheme.bodyMedium,
+  );
+
+  Widget _buildNoCommentsMessage(BuildContext context) => Text(
+    'Ainda não há comentários para este livro.',
+    style: Theme.of(context).textTheme.bodyMedium,
+  );
+
+  void _logReviewFallback(Object err, StackTrace? stack) {
+    if (kDebugMode) {
+      debugPrint('Fallback de avaliações/comentários acionado: $err');
+      if (stack != null) {
+        debugPrint(stack.toString());
+      }
+    }
   }
 
   Widget? _buildListingInfoCard(BuildContext context) {
@@ -517,10 +537,7 @@ class _BookDetailsContentState extends ConsumerState<BookDetailsContent> {
                 ),
                 const SizedBox(height: 8),
                 if (summary == null || summary.count == 0)
-                  Text(
-                    'Ainda não há avaliações registradas para este livro.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  )
+                  _buildNoRatingsMessage(context)
                 else ...[
                   Wrap(
                     spacing: 10,
@@ -542,13 +559,10 @@ class _BookDetailsContentState extends ConsumerState<BookDetailsContent> {
             );
           },
           loading: () => const LinearProgressIndicator(minHeight: 2),
-          error:
-              (err, _) => Text(
-                'Não foi possível carregar as avaliações: $err',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.redAccent),
-              ),
+          error: (err, stack) {
+            _logReviewFallback(err, stack);
+            return _buildNoRatingsMessage(context);
+          },
         ),
         const SizedBox(height: 20),
         Text('Comentários', style: Theme.of(context).textTheme.headlineSmall),
@@ -556,10 +570,7 @@ class _BookDetailsContentState extends ConsumerState<BookDetailsContent> {
         reviewsAsync.when(
           data: (reviews) {
             if (reviews.isEmpty) {
-              return Text(
-                'Ainda não há comentários para este livro.',
-                style: Theme.of(context).textTheme.bodyMedium,
-              );
+              return _buildNoCommentsMessage(context);
             }
             return Column(
               children:
@@ -580,13 +591,10 @@ class _BookDetailsContentState extends ConsumerState<BookDetailsContent> {
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: LinearProgressIndicator(minHeight: 2),
               ),
-          error:
-              (err, _) => Text(
-                'Não foi possível carregar os comentários: $err',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: Colors.redAccent),
-              ),
+          error: (err, stack) {
+            _logReviewFallback(err, stack);
+            return _buildNoCommentsMessage(context);
+          },
         ),
         const SizedBox(height: 24),
         Text(

@@ -1,29 +1,48 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../models/review_model.dart';
 
 class ReviewService {
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final FirebaseFirestore? _firestoreOverride;
+  final FirebaseAuth? _authOverride;
 
   ReviewService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+    : _firestoreOverride = firestore,
+      _authOverride = auth;
 
-  CollectionReference<Map<String, dynamic>> _reviewCollection(
+  FirebaseFirestore? get _firestore {
+    if (_firestoreOverride != null) return _firestoreOverride;
+    if (Firebase.apps.isEmpty) return null;
+    return FirebaseFirestore.instance;
+  }
+
+  FirebaseAuth? get _auth {
+    if (_authOverride != null) return _authOverride;
+    if (Firebase.apps.isEmpty) return null;
+    return FirebaseAuth.instance;
+  }
+
+  CollectionReference<Map<String, dynamic>>? _reviewCollection(
     String reviewKey,
   ) {
-    return _firestore
+    final firestore = _firestore;
+    if (firestore == null) return null;
+    return firestore
         .collection('book_reviews')
         .doc(reviewKey)
         .collection('entries');
   }
 
   Stream<List<WorkReview>> watchReviews(String reviewKey) {
-    if (reviewKey.isEmpty) return const Stream<List<WorkReview>>.empty();
-    return _reviewCollection(
-      reviewKey,
-    ).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+    if (reviewKey.isEmpty) return _emptyReviewsStream();
+    final collection = _reviewCollection(reviewKey);
+    if (collection == null) return _emptyReviewsStream();
+    return collection.orderBy('createdAt', descending: true).snapshots().map((
+      snapshot,
+    ) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         final timestamp = data['createdAt'];
@@ -46,6 +65,9 @@ class ReviewService {
     });
   }
 
+  Stream<List<WorkReview>> _emptyReviewsStream() =>
+      Stream<List<WorkReview>>.value(const <WorkReview>[]);
+
   Future<void> submitReview({
     required String reviewKey,
     required String text,
@@ -57,7 +79,12 @@ class ReviewService {
         'reviewKey não pode ser vazio para salvar comentários',
       );
     }
-    final user = _auth.currentUser;
+    final collection = _reviewCollection(reviewKey);
+    final auth = _auth;
+    if (collection == null || auth == null) {
+      throw StateError('Firebase não está configurado nesta build.');
+    }
+    final user = auth.currentUser;
     final displayName =
         overrideName?.trim().isNotEmpty == true
             ? overrideName!.trim()
@@ -71,6 +98,6 @@ class ReviewService {
       'rating': rating,
       'createdAt': FieldValue.serverTimestamp(),
     };
-    await _reviewCollection(reviewKey).add(data);
+    await collection.add(data);
   }
 }

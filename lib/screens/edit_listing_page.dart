@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/listing_model.dart';
 import '../widgets/shared.dart';
 import '../presentation/state/providers.dart';
+import '../components/organisms/listing_type_section.dart';
 
 class EditListingPage extends ConsumerStatefulWidget {
   final Map args;
@@ -151,47 +152,12 @@ class _EditListingPageState extends ConsumerState<EditListingPage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  DropdownMenu<ListingType>(
-                    initialSelection: _type,
-                    label: const Text('Tipo de Anúncio'),
-                    leadingIcon: const Icon(Icons.category_outlined),
-                    dropdownMenuEntries: const [
-                      DropdownMenuEntry(
-                        value: ListingType.sale,
-                        label: 'Venda',
-                      ),
-                      DropdownMenuEntry(
-                        value: ListingType.swap,
-                        label: 'Troca',
-                      ),
-                      DropdownMenuEntry(
-                        value: ListingType.donation,
-                        label: 'Doação',
-                      ),
-                    ],
-                    onSelected: (v) {
-                      if (v == null) return;
-                      setState(() => _type = v);
-                    },
+                  ListingTypeSection(
+                    type: _type,
+                    onTypeChanged: (v) => setState(() => _type = v),
+                    priceController: _priceCtrl,
+                    exchangeController: _exchangeCtrl,
                   ),
-                  const SizedBox(height: 12),
-                  if (_type == ListingType.sale)
-                    TextFormField(
-                      controller: _priceCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Preço (R\$)',
-                        prefixIcon: Icon(Icons.attach_money),
-                      ),
-                    ),
-                  if (_type == ListingType.swap)
-                    TextFormField(
-                      controller: _exchangeCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Livro desejado em troca',
-                        prefixIcon: Icon(Icons.swap_horiz),
-                      ),
-                    ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,

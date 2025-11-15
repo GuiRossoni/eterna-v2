@@ -33,16 +33,36 @@ class _BookCardState extends State<BookCard> {
           scale: _pressed ? 0.97 : 1.0,
           duration: const Duration(milliseconds: 90),
           curve: Curves.easeOut,
-          child: Builder(
-            builder: (context) {
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final theme = Theme.of(context);
               final hasFocus = Focus.of(context).hasPrimaryFocus;
               final hasNetwork = widget.book.isNetwork;
               final hasAsset =
                   widget.book.imageAsset != null &&
                   widget.book.imageAsset!.isNotEmpty;
-              final double coverWidth = 110;
-              final double coverHeight =
-                  120; // Ajustado para evitar overflow no tile (h≈164)
+
+              const double coverWidth = 110;
+              const double spacing = 6;
+              const double desiredCoverHeight = 120;
+              final textStyle = theme.textTheme.bodySmall;
+              final double fontSize = textStyle?.fontSize ?? 12;
+              final double lineHeightFactor = textStyle?.height ?? 1.2;
+              final double textBlockHeight = fontSize * lineHeightFactor * 2;
+
+              double coverHeight = desiredCoverHeight;
+              final bool hasBoundedHeight = constraints.maxHeight.isFinite;
+              if (hasBoundedHeight) {
+                final double available =
+                    constraints.maxHeight - spacing - textBlockHeight;
+                if (available.isFinite) {
+                  coverHeight = available.clamp(0.0, desiredCoverHeight);
+                }
+              }
+              if (!hasBoundedHeight && coverHeight <= 0) {
+                coverHeight = desiredCoverHeight;
+              }
+
               final Widget cover =
                   hasNetwork
                       ? BookCover.network(
@@ -73,6 +93,7 @@ class _BookCardState extends State<BookCard> {
                           child: const Icon(Icons.book, size: 36),
                         ),
                       );
+
               return InkWell(
                 borderRadius: BorderRadius.circular(8),
                 onTap: widget.onTap,
@@ -83,7 +104,7 @@ class _BookCardState extends State<BookCard> {
                           ? BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.primary,
+                              color: theme.colorScheme.primary,
                               width: 2,
                             ),
                           )
@@ -93,14 +114,15 @@ class _BookCardState extends State<BookCard> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       cover,
-                      const SizedBox(height: 6),
+                      const SizedBox(height: spacing),
                       SizedBox(
                         width: coverWidth,
+                        height: textBlockHeight,
                         child: Text(
                           widget.book.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: textStyle,
                         ),
                       ),
                     ],
